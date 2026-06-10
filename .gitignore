@@ -1,0 +1,7 @@
+sorted/
+__pycache__/
+*.pyc
+*.pth
+*.pkl
+output/
+noisy_boxes/
