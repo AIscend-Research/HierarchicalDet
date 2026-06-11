@@ -46,7 +46,8 @@ from detectron2.solver.build import maybe_add_gradient_clipping
 from detectron2.modeling import build_model
 
 from evaluator import DatasetEvaluator, inference_on_dataset
-from hierarchialdet import DiffusionDetDatasetMapper, add_diffusiondet_config, DiffusionDetWithTTA
+from dataset_mapper_patched import DiffusionDetDatasetMapper
+from hierarchialdet import add_diffusiondet_config, DiffusionDetWithTTA
 from hierarchialdet.util.model_ema import (
     add_model_ema_configs, may_build_model_ema, may_get_ema_checkpointer,
     EMAHook, apply_model_ema_and_restore, EMADetectionCheckpointer
