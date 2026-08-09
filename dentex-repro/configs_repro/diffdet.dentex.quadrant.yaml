@@ -1,0 +1,14 @@
+# Stage 0 — quadrant detection (tier 0).
+#
+# The repo ships no quadrant config; this derives one. Note what it does *not*
+# do: it does not set NUM_CLASSES to 4-as-a-scalar. The released head indexes
+# MODEL.DiffusionDet.NUM_CLASSES as a 3-element list, so a genuinely 4-class
+# single-head model cannot be configured without patching upstream. The
+# curriculum design the released code actually implements is one model with
+# three fixed-size heads, trained in stages: the quadrant stage supervises only
+# head 1 because the normalized quadrant annotations carry
+# `category_id_2 = category_id_3 = null`.
+#
+# Verified behaviour: a training step on this stage logs loss_ce1 / loss_bbox /
+# loss_giou and no loss_ce2 or loss_ce3.
+_BASE_: "diffdet.dentex.multilabel.yaml"

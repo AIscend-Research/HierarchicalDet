@@ -1,0 +1,11 @@
+# Produced by running the suite, never committed.
+runs/
+dentex_raw/
+dentex_raw_smoke/
+dentex_converted/
+kaggle_upload/
+Swin-Transformer/
+src/requirements.lock.txt
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

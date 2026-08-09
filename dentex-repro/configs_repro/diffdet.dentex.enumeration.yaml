@@ -1,0 +1,12 @@
+# Stage 1 — tooth enumeration within quadrant (tier 1).
+#
+# Supervises heads 1 and 2; the diagnosis head has no labels in this tier's
+# data (`category_id_3 = null`) and is therefore untouched.
+#
+# Deliberately NOT derived from the repo's
+# `configs/diffdet.custom.swinbase.enumeration.yaml`: that file sets
+# NUM_CLASSES to the scalar 32 and points MODEL.WEIGHTS at the authors'
+# unreleased SimMIM checkpoint. The scalar would crash the head
+# (hierarchialdet/head.py:81 does NUM_CLASSES[0] on it), and the SimMIM
+# checkpoint is not public — both are recorded as deviations.
+_BASE_: "diffdet.dentex.multilabel.yaml"

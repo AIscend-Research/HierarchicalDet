@@ -1,0 +1,22 @@
+# Base DiffusionDet — the non-hierarchical, non-multilabel baseline.
+#
+# INTERPRETATION (ambiguous in the released code; logged as a deviation):
+# the paper's "DiffusionDet" row is a plain single-label detector per tier, but
+# the vendored head cannot be configured single-head — hierarchialdet/head.py:81
+# indexes MODEL.DiffusionDet.NUM_CLASSES as a 3-element list, so the repo's own
+# `configs/diffdet.custom.swinbase.enumeration.yaml` (NUM_CLASSES: 32, a scalar)
+# would crash on construction. The equivalent the *data* can express is used
+# instead: the target tier's labels are moved into `category_id_1` and the other
+# two tiers are nulled out (src/data_convert.flatten_tier), so exactly one head
+# is supervised and it sees a flat label space with no hierarchy and no
+# multi-label structure. Initialization is ImageNet Swin-B and no prior-tier
+# boxes are injected, so neither ablation switch is active.
+#
+# Everything else — backbone, proposals, augmentation, sampler, loss, seed,
+# schedule — is inherited unchanged from the multilabel config, so the only
+# difference against `Ours_wo_Manip_Transfer` is the multi-label head structure.
+# That is the comparison the paper's base row is for.
+#
+# NUM_CLASSES[0] must match the flattened tier's class count and is set by the
+# launcher as an override: 4 for quadrant, 8 for enumeration, 4 for diagnosis.
+_BASE_: "diffdet.dentex.multilabel.yaml"

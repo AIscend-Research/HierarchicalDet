@@ -1,0 +1,13 @@
+# Stage 2 — diagnosis (tier 2). All three heads supervised.
+#
+# The four ablation variants all use THIS file. They differ only in two things,
+# both set by the launcher and neither of them a config edit:
+#
+#   weight transfer   -> MODEL.WEIGHTS (enumeration checkpoint vs ImageNet Swin-B)
+#   noisy-box manip.  -> NOISY_BOX_TRAIN / NOISY_BOX_VAL env vars, read by the
+#                        patched dataset mapper and injected into
+#                        prepare_diffusion_concat as the seed of the noise
+#
+# Keeping the config identical across variants is what makes the ablation an
+# ablation: same architecture, same schedule, same seed, same data.
+_BASE_: "diffdet.dentex.multilabel.yaml"

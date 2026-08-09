@@ -1,0 +1,60 @@
+# Shared configuration for every hierarchical (multi-label) stage of the
+# reproduction: quadrant, enumeration, and all four diagnosis variants.
+#
+# Derived from the repo's own `configs/diffdet.custom.swinbase.nonpretrain.yaml`,
+# with three changes, each deliberate:
+#
+# 1. MODEL.WEIGHTS points at a `.pth`, not the released `.pkl` filename.
+#    detectron2's DetectionCheckpointer dispatches purely on file extension:
+#    a native torch checkpoint saved as `.pkl` is parsed as a Caffe2 blob and
+#    the backbone ends up effectively random, reported only as warnings. The
+#    launcher overrides this per run anyway (it is the weight-transfer switch).
+# 2. TEST.EVAL_PERIOD 0. Every reported number comes from notebook 05; a
+#    mid-training evaluation would spend the wall-clock budget that is meant to
+#    buy training iterations.
+# 3. SOLVER.MAX_ITER / STEPS are placeholders — the run mode sets MAX_ITER,
+#    either from a fixed schedule or from a measured throughput calibration.
+#
+# NOT changed, on purpose: NUM_CLASSES stays the 3-element [4, 8, 4] the head
+# requires (hierarchialdet/head.py:81-83 indexes it), NUM_PROPOSALS stays 1000,
+# the seed stays the repo's own 40244023, and the augmentation pipeline is
+# untouched.
+#
+# Which tier is supervised is decided by the *data*, not by this file: the
+# normalized annotations carry `category_id_2/3 = null` for tiers that do not
+# apply, and the loss skips those heads.
+_BASE_: "../../configs/Base-DiffusionDet.yaml"
+MODEL:
+  WEIGHTS: "models/swin_base_patch4_window7_224_22k.pth"
+  BACKBONE:
+    NAME: build_swintransformer_fpn_backbone
+  SWIN:
+    SIZE: B-22k
+  FPN:
+    IN_FEATURES: ["swin0", "swin1", "swin2", "swin3"]
+  ROI_HEADS:
+    NUM_CLASSES: 4
+  DiffusionDet:
+    NUM_PROPOSALS: 1000
+    NUM_CLASSES: [4, 8, 4]
+    USE_FED_LOSS: True
+DATASETS:
+  TRAIN: ("custom_train_class",)
+  TEST: ("custom_validation_class",)
+DATALOADER:
+  SAMPLER_TRAIN: "RepeatFactorTrainingSampler"
+  REPEAT_THRESHOLD: 0.001
+  NUM_WORKERS: 2
+  FILTER_EMPTY_ANNOTATIONS: False
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 40000
+  CHECKPOINT_PERIOD: 2500
+  AMP:
+    ENABLED: True
+INPUT:
+  CROP:
+    ENABLED: True
+  FORMAT: "RGB"
+TEST:
+  EVAL_PERIOD: 0
