@@ -10,3 +10,5 @@ phase1_audit/extracted/
 phase1_audit/README.md
 phase1_audit/.gitattributes
 phase1_audit/figures/
+.DS_Store
+dentex-repro/.pip-constraints.txt

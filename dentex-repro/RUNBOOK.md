@@ -209,3 +209,23 @@ regenerated into `paper_assets/scope_and_claims.md`.
 
 *All outputs of this suite are research artifacts. Nothing here is a clinical
 claim, and nothing here is validated for clinical use.*
+
+---
+
+## 8. Known failure modes and their fixes
+
+**`ValueError: numpy.dtype size changed, Expected 96 ... got 88`**, raised from
+`pycocotools/_mask.pyx` inside `detectron2.structures.masks`. This reads as a
+detectron2 problem and is not one: the vendored `pycocotools` ships Python
+sources only, and its compiled `_mask` extension is grafted in from the
+pip-installed package. That extension is compiled against numpy's C ABI, so it
+breaks if it was built against a different numpy major version than the one
+installed. Pinning a `pycocotools` version *causes* this, because pip then
+builds from source in an isolated environment that pulls the newest numpy
+regardless of what the image has.
+
+`setup_env.ensure_pycocotools_mask` now owns this end to end: it verifies the
+extension by importing it in a subprocess, discards a mismatched one, tries each
+candidate in site-packages, and only as a last resort rebuilds with
+`--no-build-isolation --no-binary :all:` so the build sees the installed numpy.
+If it still cannot, it raises with the exact command to run by hand.

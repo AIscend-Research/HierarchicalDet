@@ -294,40 +294,128 @@ def _pycocotools_mask_extension_present() -> bool:
     return bool(glob.glob(os.path.join(REPO_ROOT, "pycocotools", "_mask*.so")))
 
 
-def ensure_pycocotools_mask() -> str:
+def _vendored_mask_imports() -> bool:
     """
-    The vendored ``pycocotools`` package ships Python sources only -- its
-    compiled ``_mask`` extension is not in the repo. Copy the compiled
-    extension out of the pip-installed pycocotools (installed for its binary,
-    then shadowed for its Python) into the vendored package.
+    Can the vendored ``pycocotools.mask`` actually be imported?
 
-    Returns the path of the extension now sitting in the vendored package.
+    Checked in a **subprocess**: a failed extension import cannot be retried in
+    the same interpreter (the module is cached and the shared object is already
+    mapped), so an in-process check would report stale results after a repair.
     """
+    code = (
+        "import sys; sys.path.insert(0, {!r}); "
+        "import pycocotools.mask".format(REPO_ROOT)
+    )
+    result = subprocess.run([sys.executable, "-c", code],
+                            capture_output=True, text=True, cwd=os.sep)
+    return result.returncode == 0
+
+
+def _site_package_masks() -> List[str]:
     import glob
-
-    existing = glob.glob(os.path.join(REPO_ROOT, "pycocotools", "_mask*.so"))
-    if existing:
-        return existing[0]
-
-    import shutil
     import site
     import sysconfig
 
+    directories = list(getattr(site, "getsitepackages", lambda: [])())
+    directories += [sysconfig.get_paths()["purelib"], sysconfig.get_paths()["platlib"]]
     candidates: List[str] = []
-    site_dirs = list(getattr(site, "getsitepackages", lambda: [])())
-    site_dirs.append(sysconfig.get_paths()["purelib"])
-    site_dirs.append(sysconfig.get_paths()["platlib"])
-    for directory in site_dirs:
+    for directory in directories:
         candidates.extend(glob.glob(os.path.join(directory, "pycocotools", "_mask*.so")))
-    candidates = [c for c in candidates if not os.path.abspath(c).startswith(REPO_ROOT + os.sep)]
-    if not candidates:
-        raise RuntimeError(
-            "no compiled pycocotools _mask extension found in site-packages. "
-            "`pip install pycocotools` first: the vendored fork needs its binary."
-        )
-    destination = os.path.join(REPO_ROOT, "pycocotools", os.path.basename(candidates[0]))
-    shutil.copy2(candidates[0], destination)
-    return destination
+    return [c for c in candidates if not os.path.abspath(c).startswith(REPO_ROOT + os.sep)]
+
+
+def ensure_pycocotools_mask() -> str:
+    """
+    Graft a **working** compiled ``_mask`` extension into the vendored
+    ``pycocotools`` package, which ships Python sources only.
+
+    The subtlety this function exists for: ``_mask`` is a Cython extension
+    compiled against numpy's C ABI. If it is built against a different numpy
+    major version than the one installed at runtime, importing it dies with
+    ``ValueError: numpy.dtype size changed ... Expected 96 ... got 88`` — deep
+    inside ``detectron2.structures``, which reads as a detectron2 problem and is
+    not one. Pinning a pycocotools version makes this *more* likely, because pip
+    then builds from source in an isolated environment that pulls the newest
+    numpy regardless of what is installed.
+
+    So: prefer whatever already works, verify by actually importing, and only as
+    a last resort rebuild against the installed numpy with build isolation off.
+    """
+    import glob
+    import shutil
+
+    destination_dir = os.path.join(REPO_ROOT, "pycocotools")
+    existing = glob.glob(os.path.join(destination_dir, "_mask*.so"))
+    if existing and _vendored_mask_imports():
+        return existing[0]
+    for stale in existing:                       # ABI-mismatched; do not keep it
+        os.remove(stale)
+
+    def try_candidates() -> Optional[str]:
+        for candidate in _site_package_masks():
+            target = os.path.join(destination_dir, os.path.basename(candidate))
+            shutil.copy2(candidate, target)
+            if _vendored_mask_imports():
+                return target
+            os.remove(target)
+        return None
+
+    grafted = try_candidates()
+    if grafted:
+        return grafted
+
+    # Nothing usable is installed. Every remaining attempt passes the
+    # constraints file, because pip must not be allowed to "solve" an ABI
+    # mismatch by upgrading numpy — that would break torch and every other
+    # compiled package in the image. Each attempt is verified by import.
+    constraints = _write_constraints()
+    before = {name: _distribution_version(name) for name in ABI_CRITICAL}
+    attempts = (
+        # A published wheel first: no compiler needed, and often correct.
+        ["--force-reinstall", PYCOCOTOOLS_SPEC],
+        # Otherwise build from source so the compile sees the installed numpy:
+        # --no-build-isolation stops pip creating a newest-numpy build env, and
+        # --no-binary refuses a wheel built against some other numpy.
+        ["--force-reinstall", "--no-build-isolation", "--no-binary", ":all:",
+         PYCOCOTOOLS_SPEC],
+    )
+    result = None
+    for index, specs in enumerate(attempts):
+        if index == 1:
+            _pip_install(["cython", "setuptools", "wheel"], constraints)
+        result = _pip_install(specs, constraints)
+        after = {name: _distribution_version(name) for name in ABI_CRITICAL}
+        moved = {k: (before[k], after[k]) for k in ABI_CRITICAL
+                 if before[k] and before[k] != after[k]}
+        if moved:
+            raise RuntimeError(
+                "installing pycocotools moved an ABI-critical package ({}), which "
+                "breaks torch and every other compiled extension in the image. "
+                "Restart the session and report this — the constraints file should "
+                "have prevented it.".format(moved)
+            )
+        if result.returncode == 0:
+            grafted = try_candidates()
+            if grafted:
+                return grafted
+
+    raise RuntimeError(
+        "could not produce a pycocotools _mask extension compatible with the "
+        "installed numpy ({}). The vendored pycocotools fork needs one.\n"
+        "pip said:\n{}\n"
+        "Try in a cell, then re-run this notebook:\n"
+        "  !pip install --force-reinstall --no-build-isolation --no-binary :all: "
+        "pycocotools".format(_numpy_version(), (result.stderr or "")[-2000:])
+    )
+
+
+def _numpy_version() -> str:
+    try:
+        import numpy
+
+        return numpy.__version__
+    except ImportError:
+        return "not installed"
 
 
 # --------------------------------------------------------------------------
@@ -371,62 +459,152 @@ def gpu_report() -> Dict[str, object]:
     }
 
 
-#: Exact pins for everything the vendored code needs that a Kaggle image may
-#: not already carry. torch / torchvision / numpy / Pillow / matplotlib /
-#: pandas / scipy are deliberately NOT forced: Kaggle ships them built against
-#: its own CUDA, and overriding them is the reliable way to break a session.
-#: Their resolved versions are captured in requirements.lock.txt instead, which
-#: is what actually pins the environment for reproduction.
-PINNED_REQUIREMENTS = (
-    "timm==0.9.16",
-    "fvcore==0.1.5.post20221221",
-    "iopath==0.1.9",
-    "omegaconf==2.3.0",
-    "einops==0.8.0",
-    "cloudpickle==3.0.0",
-    "termcolor==2.4.0",
-    "tabulate==0.9.0",
-    "opencv-python-headless==4.10.0.84",
-    "pycocotools==2.0.7",
-    "huggingface_hub==0.24.6",
+#: pycocotools is handled apart from everything else. It is the one dependency
+#: with a compiled extension we graft into the vendored package, and pinning a
+#: version forces pip to build it from source in an isolated environment — which
+#: pulls the newest numpy, producing a `.so` binary-incompatible with the numpy
+#: actually installed ("numpy.dtype size changed, Expected 96 ... got 88").
+#: `ensure_pycocotools_mask` owns it end to end, and verifies by import.
+PYCOCOTOOLS_SPEC = "pycocotools"
+
+
+#: Packages whose compiled extensions define the ABI everything else links
+#: against. If pip changes any of these, previously-compiled wheels elsewhere in
+#: the image (torch, torchvision, pycocotools, opencv) start failing with
+#: "binary incompatibility" errors far from the cause. They are pinned to
+#: whatever the image already has, via a pip constraints file, on every install.
+ABI_CRITICAL = ("numpy", "torch", "torchvision")
+
+#: ``(import name, pip spec)``. The import name is what gets probed; the spec is
+#: used **only if that import fails**. Deliberately unversioned: the Kaggle image
+#: already satisfies most of these, and forcing a version is how the numpy ABI
+#: gets broken. Exact resolved versions are captured in ``requirements.lock.txt``
+#: after the fact — that file, not these specs, is what pins the environment.
+REQUIREMENTS = (
+    ("timm", "timm"),
+    ("fvcore", "fvcore"),
+    ("iopath", "iopath"),
+    ("omegaconf", "omegaconf"),
+    ("einops", "einops"),
+    ("cloudpickle", "cloudpickle"),
+    ("termcolor", "termcolor"),
+    ("tabulate", "tabulate"),
+    ("yaml", "pyyaml"),
+    ("cv2", "opencv-python-headless"),
+    ("huggingface_hub", "huggingface_hub"),
+    ("scipy", "scipy"),
+    ("matplotlib", "matplotlib"),
+    ("pandas", "pandas"),
+    ("PIL", "pillow"),
+    ("tqdm", "tqdm"),
 )
 
 
-def install_dependencies(lock_path: Optional[str] = None,
-                         extra: Sequence[str] = ()) -> Dict[str, object]:
-    """
-    Install the dependency set. Prefers an existing lock file (exact
-    reproduction); falls back to :data:`PINNED_REQUIREMENTS` the first time.
+def _distribution_version(name: str) -> Optional[str]:
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+    except ImportError:
+        return None
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return None
 
-    Kaggle reverts to its base image on every fresh session, so this runs at the
-    top of every notebook, not just once.
-    """
-    lock_path = lock_path or REQUIREMENTS_LOCK
-    if os.path.exists(lock_path):
-        with open(lock_path) as handle:
-            specs = [line.strip() for line in handle
-                     if line.strip() and not line.startswith("#")]
-        source = lock_path
-        # A full freeze includes Kaggle-image packages we must not force.
-        specs = [s for s in specs if s.split("==")[0].lower() in
-                 {p.split("==")[0].lower() for p in PINNED_REQUIREMENTS}]
-    else:
-        specs, source = list(PINNED_REQUIREMENTS), "PINNED_REQUIREMENTS"
-    specs = list(specs) + list(extra)
 
-    command = [sys.executable, "-m", "pip", "install", "-q"] + specs
+def _module_importable(module: str) -> bool:
+    """Probe in a subprocess: a broken compiled module poisons this interpreter."""
+    result = subprocess.run([sys.executable, "-c", "import {}".format(module)],
+                            capture_output=True, text=True, cwd=os.sep)
+    return result.returncode == 0
+
+
+def _write_constraints() -> Optional[str]:
+    """Pin the ABI-critical packages to the versions already installed."""
+    lines = []
+    for name in ABI_CRITICAL:
+        found = _distribution_version(name)
+        if found:
+            lines.append("{}=={}".format(name, found))
+    if not lines:
+        return None
+    path = os.path.join(PROJECT_ROOT, ".pip-constraints.txt")
+    with open(path, "w") as handle:
+        handle.write("# Generated by src.setup_env: do not let pip move the ABI.\n")
+        handle.write("\n".join(lines) + "\n")
+    return path
+
+
+def _pip_install(specs: Sequence[str], constraints: Optional[str]) -> subprocess.CompletedProcess:
+    command = [sys.executable, "-m", "pip", "install", "-q"]
+    if constraints:
+        command += ["-c", constraints]
+    command += list(specs)
     result = subprocess.run(command, capture_output=True, text=True)
-    if result.returncode != 0 and "--break-system-packages" not in result.stderr:
-        retry = subprocess.run(command + ["--break-system-packages"],
-                               capture_output=True, text=True)
-        if retry.returncode != 0:
+    if result.returncode != 0:
+        # Newer pip refuses to touch a distro-managed environment without this.
+        result = subprocess.run(command + ["--break-system-packages"],
+                                capture_output=True, text=True)
+    return result
+
+
+def install_dependencies(extra: Sequence[str] = ()) -> Dict[str, object]:
+    """
+    Make every dependency importable, without moving anything already working.
+
+    Two rules, both learned the hard way on a real Kaggle session:
+
+    1. **Install only what is missing.** The Kaggle image already satisfies most
+       of this list. Reinstalling a package to a pinned version drags its build
+       requirements in with it, and that is how ``pycocotools`` ended up compiled
+       against numpy 2 while the image ran numpy 1 — surfacing four imports later
+       as ``numpy.dtype size changed`` inside ``detectron2.structures``.
+    2. **Never let pip move numpy / torch / torchvision.** They are pinned to the
+       installed versions through a constraints file on every call, and the
+       versions are re-checked afterwards.
+
+    Kaggle reverts to its base image every session, so this runs at the top of
+    every notebook.
+    """
+    before = {name: _distribution_version(name) for name in ABI_CRITICAL}
+    constraints = _write_constraints()
+
+    missing, already = [], []
+    for module, spec in REQUIREMENTS:
+        (already if _module_importable(module) else missing).append((module, spec))
+
+    result = None
+    specs = [spec for _module, spec in missing] + list(extra)
+    if specs:
+        result = _pip_install(specs, constraints)
+        if result.returncode != 0:
             raise RuntimeError(
-                "dependency install failed:\n{}\n{}".format(result.stderr, retry.stderr)
+                "dependency install failed for {}:\n{}".format(specs, result.stderr[-4000:])
             )
-        result = retry
-    elif result.returncode != 0:
-        raise RuntimeError("dependency install failed:\n{}".format(result.stderr))
-    return {"source": source, "specs": specs, "stdout": result.stdout[-2000:]}
+
+    still_missing = [module for module, _spec in missing if not _module_importable(module)]
+    if still_missing:
+        raise RuntimeError(
+            "these modules are still not importable after installing {}: {}. "
+            "Check the pip output above.".format(specs, still_missing)
+        )
+
+    after = {name: _distribution_version(name) for name in ABI_CRITICAL}
+    moved = {name: (before[name], after[name])
+             for name in ABI_CRITICAL if before[name] and before[name] != after[name]}
+    if moved:
+        raise RuntimeError(
+            "pip changed an ABI-critical package despite the constraints file: {}. "
+            "Every compiled extension in the image was built against the old "
+            "version; restart the session before continuing.".format(moved)
+        )
+
+    return {
+        "installed": specs,
+        "already_present": [module for module, _spec in already],
+        "constraints": constraints,
+        "abi_versions": after,
+        "stdout": (result.stdout[-2000:] if result else ""),
+    }
 
 
 def pip_freeze() -> List[str]:
@@ -439,19 +617,28 @@ def pip_freeze() -> List[str]:
 
 
 def write_requirements_lock(path: str = REQUIREMENTS_LOCK) -> str:
-    """Freeze the resolved environment. Notebook 00 writes it; the rest read it."""
+    """
+    Freeze the fully resolved environment.
+
+    **This file, not the specs in :data:`REQUIREMENTS`, is what pins the
+    environment for reproduction.** The specs are unversioned on purpose: forcing
+    versions on top of a Kaggle image is what breaks the numpy ABI. Recording
+    exactly what resolved gives reproducibility without that risk.
+    """
     os.makedirs(os.path.dirname(path), exist_ok=True)
     lines = pip_freeze()
     header = [
         "# Resolved dependency set for the HierarchicalDet reproduction.",
-        "# Generated by src.setup_env.write_requirements_lock in notebook 00.",
+        "# Generated by src.setup_env.write_requirements_lock.",
         "# Python {} on {} ({}).".format(
             platform.python_version(), platform.platform(), platform.machine()
         ),
-        "# detectron2 and pycocotools are VENDORED in the repo and deliberately",
-        "# absent from this list except for pycocotools' binary wheel, which is",
-        "# installed only so its compiled _mask extension can be copied into the",
-        "# vendored package (see setup_env.ensure_pycocotools_mask).",
+        "# This is a RECORD of what resolved, not an input: the notebooks install",
+        "# only modules that are missing, and never force a version on top of the",
+        "# host image (that is how the pycocotools/numpy ABI break happened).",
+        "# detectron2 and pycocotools are VENDORED in the repo; the pip-installed",
+        "# pycocotools exists only to supply a compiled _mask extension, which is",
+        "# grafted in and verified by setup_env.ensure_pycocotools_mask.",
     ]
     with open(path, "w") as handle:
         handle.write("\n".join(header + lines) + "\n")

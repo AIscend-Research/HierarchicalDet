@@ -70,7 +70,13 @@ import json
 from src import setup_env
 
 setup_env.install_dependencies()
-setup_env.ensure_pycocotools_mask()
+# The vendored pycocotools ships Python sources only; its compiled `_mask`
+# extension is grafted in here and VERIFIED BY IMPORT. It is compiled against
+# numpy's C ABI, so a mismatch surfaces as "numpy.dtype size changed" deep
+# inside detectron2.structures — which reads as a detectron2 problem and is not.
+import numpy
+print("numpy {} | pycocotools _mask -> {}".format(
+    numpy.__version__, setup_env.ensure_pycocotools_mask()))
 run = setup_env.bootstrap(RUN_MODE@REQUIRE_GPU@)
 
 from src import manifest, train_utils
