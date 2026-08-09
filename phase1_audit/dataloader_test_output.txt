@@ -1,0 +1,44 @@
+/opt/homebrew/Caskroom/miniconda/base/envs/hierarchicaldet-py312/lib/python3.12/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+
+Category ids 1 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+
+
+Category ids 2 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+
+
+        Category ids 3 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+        
+
+Category ids 1 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+
+
+Category ids 2 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+
+
+        Category ids 3 in annotations are not in [1, #categories]! We'll apply a mapping for you.
+        
+=== quadrant_train ===
+  REGISTRATION/LOAD FAILED: KeyError: 'categories_1'
+
+=== quadrant_enumeration_train ===
+  REGISTRATION/LOAD FAILED: KeyError: 'categories_3'
+
+=== quadrant_enumeration_disease_train ===
+[{'id': 0, 'name': '1', 'supercategory': '1'}, {'id': 1, 'name': '2', 'supercategory': '2'}, {'id': 2, 'name': '3', 'supercategory': '3'}, {'id': 3, 'name': '4', 'supercategory': '4'}]
+[{'id': 0, 'name': '1', 'supercategory': '1'}, {'id': 1, 'name': '2', 'supercategory': '2'}, {'id': 2, 'name': '3', 'supercategory': '3'}, {'id': 3, 'name': '4', 'supercategory': '4'}, {'id': 4, 'name': '5', 'supercategory': '5'}, {'id': 5, 'name': '6', 'supercategory': '6'}, {'id': 6, 'name': '7', 'supercategory': '7'}, {'id': 7, 'name': '8', 'supercategory': '8'}]
+[{'id': 0, 'name': 'Impacted', 'supercategory': 'Impacted'}, {'id': 1, 'name': 'Caries', 'supercategory': 'Caries'}, {'id': 2, 'name': 'Periapical Lesion', 'supercategory': 'Periapical Lesion'}, {'id': 3, 'name': 'Deep Caries', 'supercategory': 'Deep Caries'}]
+  DatasetCatalog.get() returned 705 records
+  sample record keys: ['file_name', 'height', 'width', 'image_id', 'annotations']
+  sample annotation keys: ['iscrowd', 'bbox', 'category_id_1', 'category_id_2', 'category_id_3', 'segmentation', 'bbox_mode']
+  mapper success: 705/705  failures: 0
+
+=== quadrant_enumeration_disease_val ===
+[{'id': 0, 'name': '1', 'supercategory': '1'}, {'id': 1, 'name': '2', 'supercategory': '2'}, {'id': 2, 'name': '3', 'supercategory': '3'}, {'id': 3, 'name': '4', 'supercategory': '4'}]
+[{'id': 0, 'name': '1', 'supercategory': '1'}, {'id': 1, 'name': '2', 'supercategory': '2'}, {'id': 2, 'name': '3', 'supercategory': '3'}, {'id': 3, 'name': '4', 'supercategory': '4'}, {'id': 4, 'name': '5', 'supercategory': '5'}, {'id': 5, 'name': '6', 'supercategory': '6'}, {'id': 6, 'name': '7', 'supercategory': '7'}, {'id': 7, 'name': '8', 'supercategory': '8'}]
+[{'id': 0, 'name': 'Impacted', 'supercategory': 'Impacted'}, {'id': 1, 'name': 'Caries', 'supercategory': 'Caries'}, {'id': 2, 'name': 'Periapical Lesion', 'supercategory': 'Periapical Lesion'}, {'id': 3, 'name': 'Deep Caries', 'supercategory': 'Deep Caries'}]
+  DatasetCatalog.get() returned 50 records
+  sample record keys: ['file_name', 'height', 'width', 'image_id', 'annotations']
+  sample annotation keys: ['iscrowd', 'bbox', 'category_id_1', 'category_id_2', 'category_id_3', 'segmentation', 'bbox_mode']
+  mapper success: 50/50  failures: 0
+

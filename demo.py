@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import argparse
 import glob
+import json
 import multiprocessing as mp
 import numpy as np
 import os
@@ -141,6 +142,25 @@ if __name__ == "__main__":
                     assert len(args.input) == 1, "Please specify a directory with args.output"
                     out_filename = args.output
                 visualized_output.save(out_filename)
+
+                # Raw score file alongside the visualization: box coordinates,
+                # confidence, and per-tier class indices for every kept
+                # instance, in case downstream analysis needs the numbers
+                # rather than just the rendered image.
+                if "instances" in predictions:
+                    inst = predictions["instances"].to("cpu")
+                    boxes = inst.pred_boxes.tensor.tolist() if inst.has("pred_boxes") else []
+                    scores = inst.scores.tolist() if inst.has("scores") else []
+                    records = []
+                    for i in range(len(inst)):
+                        record = {"bbox_xyxy": boxes[i], "score": scores[i]}
+                        for tier_field in ("pred_classes_1", "pred_classes_2", "pred_classes_3"):
+                            if inst.has(tier_field):
+                                record[tier_field] = int(getattr(inst, tier_field)[i])
+                        records.append(record)
+                    scores_filename = os.path.splitext(out_filename)[0] + "_scores.json"
+                    with open(scores_filename, "w") as f:
+                        json.dump({"file_name": path, "instances": records}, f, indent=2)
             else:
                 cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
                 cv2.imshow(WINDOW_NAME, visualized_output.get_image()[:, :, ::-1])

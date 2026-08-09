@@ -2,6 +2,23 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 
 import torch
+
+# See detectron2/utils/env.py's _configure_libraries() for why this is
+# needed (some torchvision versions' own __init__ chain imports PIL.ImageFont,
+# which needs PIL._util.is_directory, removed in newer Pillow). Applied again
+# directly here since this is the first place in detectron2.layers that
+# actually triggers a torchvision import, independent of whether the central
+# patch ran.
+import PIL._util
+
+if not hasattr(PIL._util, "is_directory"):
+    import os as _os
+
+    def _is_directory(f):
+        return isinstance(f, str) and _os.path.isdir(f)
+
+    PIL._util.is_directory = _is_directory
+
 from torchvision.ops import boxes as box_ops
 from torchvision.ops import nms  # noqa . for compatibility
 

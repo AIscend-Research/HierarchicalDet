@@ -5,6 +5,12 @@ import torch
 from PIL import Image
 from torch.nn import functional as F
 
+# See detectron2/data/transforms/transform.py for why this is needed (Pillow
+# >= 10 removed this legacy alias). Redundant with the patches there and in
+# detectron2/utils/env.py -- belt and suspenders given inconsistent behavior
+# observed for the central patch on some hosted environments.
+Image.BILINEAR = Image.Resampling.BILINEAR
+
 __all__ = ["paste_masks_in_image"]
 
 

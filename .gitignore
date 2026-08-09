@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+pycocotools/_mask*.so
+models/*.pkl
+models/*.pth
+datasets/
+phase1_audit/DENTEX/
+phase1_audit/extracted/
+phase1_audit/README.md
+phase1_audit/.gitattributes
+phase1_audit/figures/

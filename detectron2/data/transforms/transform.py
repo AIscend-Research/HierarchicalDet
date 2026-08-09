@@ -18,6 +18,19 @@ from fvcore.transforms.transform import (
 )
 from PIL import Image
 
+# Redundant with the patch in detectron2/utils/env.py's _configure_libraries()
+# (which should already have run via `import detectron2` by this point) --
+# applied again directly here since the classes below use these as
+# module-import-time default-argument values, and some hosted environments
+# have shown inconsistent behavior for the central patch. See env.py for the
+# full explanation of why Pillow >= 10 needs this at all. Set unconditionally,
+# not guarded by hasattr() -- on some Pillow versions (e.g. 11.3.0) merely
+# accessing the removed name raises RuntimeError instead of returning False.
+Image.NEAREST = Image.Resampling.NEAREST
+Image.BILINEAR = Image.Resampling.BILINEAR
+Image.BICUBIC = Image.Resampling.BICUBIC
+Image.LINEAR = Image.Resampling.BILINEAR
+
 try:
     import cv2  # noqa
 except ImportError:

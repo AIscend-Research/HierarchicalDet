@@ -4,7 +4,7 @@ MODEL:
   BACKBONE:
     NAME: build_swintransformer_fpn_backbone
   SWIN:
-    SIZE: L-22k
+    SIZE: B-22k
   FPN:
     IN_FEATURES: [ "swin0", "swin1", "swin2", "swin3" ]
   ROI_HEADS:

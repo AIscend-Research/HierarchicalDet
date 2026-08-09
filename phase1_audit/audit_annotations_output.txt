@@ -1,0 +1,36 @@
+=== quadrant (train) ===
+  images: 693  annotations: 2772
+  annotations with invalid image_id: 0
+  image file_names missing on disk: 0
+  annotations with out-of-range category ids: {}
+  annotations with null category ids (partial annotation): {}
+  images with zero annotations: 0
+  annotations with bad bboxes: 0
+
+=== quadrant-enumeration (train) ===
+  images: 634  annotations: 18095
+  annotations with invalid image_id: 0
+  image file_names missing on disk: 0
+  annotations with out-of-range category ids: {}
+  annotations with null category ids (partial annotation): {}
+  images with zero annotations: 0
+  annotations with bad bboxes: 0
+
+=== quadrant-enumeration-diagnosis (train) ===
+  images: 705  annotations: 3529
+  annotations with invalid image_id: 0
+  image file_names missing on disk: 0
+  annotations with out-of-range category ids: {}
+  annotations with null category ids (partial annotation): {}
+  images with zero annotations: 27
+  annotations with bad bboxes: 0
+
+=== quadrant-enumeration-diagnosis (validation) ===
+  images: 50  annotations: 182
+  annotations with invalid image_id: 0
+  image file_names missing on disk: 0
+  annotations with out-of-range category ids: {}
+  annotations with null category ids (partial annotation): {}
+  images with zero annotations: 4
+  annotations with bad bboxes: 0
+

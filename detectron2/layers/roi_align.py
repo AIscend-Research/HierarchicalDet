@@ -1,5 +1,19 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 from torch import nn
+
+# See detectron2/utils/env.py's _configure_libraries() for why this is
+# needed. Applied again directly here, independent of whether the central
+# patch ran -- see detectron2/layers/nms.py for the full explanation.
+import PIL._util
+
+if not hasattr(PIL._util, "is_directory"):
+    import os as _os
+
+    def _is_directory(f):
+        return isinstance(f, str) and _os.path.isdir(f)
+
+    PIL._util.is_directory = _is_directory
+
 from torchvision.ops import roi_align
 
 

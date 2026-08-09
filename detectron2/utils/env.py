@@ -59,6 +59,42 @@ def _configure_libraries():
     """
     Configurations for some libraries.
     """
+    # This codebase's transform/augmentation code (e.g.
+    # detectron2/data/transforms/transform.py) references PIL.Image.LINEAR,
+    # .NEAREST, .BILINEAR, .BICUBIC as module-level default-argument values,
+    # evaluated at import time. Pillow >= 10 removed these flat aliases in
+    # favor of the Image.Resampling enum. Restoring them here (rather than
+    # relying on pinning an old Pillow version) works regardless of whatever
+    # Pillow version is actually installed -- pip installs/pins have proven
+    # unreliable to enforce on some hosted notebook environments (e.g. Kaggle
+    # blocks package reinstalls under PEP 668 in ways that fail silently).
+    # Set unconditionally rather than guarding with hasattr(): on some Pillow
+    # versions (e.g. 11.3.0) accessing the removed name itself raises
+    # RuntimeError instead of returning False, so hasattr() is not safe to
+    # use as the check here. Overwriting is harmless on Pillow versions that
+    # still define these natively.
+    import PIL.Image
+
+    PIL.Image.NEAREST = PIL.Image.Resampling.NEAREST
+    PIL.Image.BILINEAR = PIL.Image.Resampling.BILINEAR
+    PIL.Image.BICUBIC = PIL.Image.Resampling.BICUBIC
+    PIL.Image.LINEAR = PIL.Image.Resampling.BILINEAR
+
+    # Similarly, some torchvision versions' `torchvision/utils.py` imports
+    # PIL.ImageFont, which itself does `from ._util import is_directory,
+    # is_path` -- but newer Pillow removed `is_directory` from PIL._util
+    # (only `is_path` remains). Restore it so `import torchvision` (triggered
+    # transitively by detectron2/layers/deform_conv.py) doesn't ImportError.
+    import PIL._util
+
+    if not hasattr(PIL._util, "is_directory"):
+        import os as _os
+
+        def _is_directory(f):
+            return isinstance(f, str) and _os.path.isdir(f)
+
+        PIL._util.is_directory = _is_directory
+
     # An environment option to disable `import cv2` globally,
     # in case it leads to negative performance impact
     disable_cv2 = int(os.environ.get("DETECTRON2_DISABLE_CV2", False))

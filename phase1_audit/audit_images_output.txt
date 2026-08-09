@@ -1,0 +1,79 @@
+=== quadrant (train) ===
+  files: 693  loadable: 693  corrupt: 0
+  top resolutions (w,h -> count):
+    (2868, 1504) -> 57
+    (1976, 976) -> 48
+    (2872, 1504) -> 18
+    (2922, 1316) -> 8
+    (2952, 1316) -> 8
+    (2844, 1316) -> 7
+    (2965, 1316) -> 7
+    (2990, 1316) -> 7
+  total distinct resolutions: 245
+
+=== quadrant-enumeration (train) ===
+  files: 634  loadable: 634  corrupt: 0
+  top resolutions (w,h -> count):
+    (1976, 976) -> 52
+    (2868, 1504) -> 50
+    (2872, 1504) -> 16
+    (2922, 1316) -> 7
+    (2952, 1316) -> 7
+    (2844, 1316) -> 7
+    (2820, 1316) -> 6
+    (2968, 1316) -> 6
+  total distinct resolutions: 235
+
+=== quadrant-enumeration-diagnosis (train) ===
+  files: 705  loadable: 705  corrupt: 0
+  top resolutions (w,h -> count):
+    (2872, 1504) -> 133
+    (2868, 1504) -> 38
+    (1976, 976) -> 25
+    (2884, 1504) -> 15
+    (3076, 1536) -> 8
+    (2952, 1316) -> 6
+    (2802, 1316) -> 6
+    (2880, 1504) -> 6
+  total distinct resolutions: 251
+
+=== unlabelled (train) ===
+  files: 1571  loadable: 1571  corrupt: 0
+  top resolutions (w,h -> count):
+    (2872, 1504) -> 483
+    (2868, 1504) -> 161
+    (2884, 1504) -> 45
+    (3076, 1536) -> 34
+    (2492, 1156) -> 17
+    (2892, 1504) -> 11
+    (2946, 1316) -> 10
+    (2860, 1316) -> 9
+  total distinct resolutions: 295
+
+=== quadrant-enumeration-diagnosis (validation) ===
+  files: 50  loadable: 50  corrupt: 0
+  top resolutions (w,h -> count):
+    (2872, 1504) -> 8
+    (1976, 976) -> 4
+    (2884, 1504) -> 2
+    (2794, 1316) -> 2
+    (2967, 1316) -> 2
+    (2959, 1316) -> 2
+    (2874, 1316) -> 1
+    (2728, 1316) -> 1
+  total distinct resolutions: 36
+
+=== test (disease/input) ===
+  files: 250  loadable: 250  corrupt: 0
+  top resolutions (w,h -> count):
+    (2872, 1504) -> 48
+    (2868, 1504) -> 14
+    (1976, 976) -> 6
+    (3076, 1536) -> 6
+    (2884, 1504) -> 4
+    (2878, 1316) -> 4
+    (2836, 1316) -> 4
+    (2812, 1316) -> 3
+  total distinct resolutions: 138
+
+wrote image_audit_results.json

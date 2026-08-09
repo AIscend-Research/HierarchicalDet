@@ -19,6 +19,16 @@ from fvcore.transforms.transform import (
 )
 from PIL import Image
 
+# See detectron2/data/transforms/transform.py for why this is needed (Pillow
+# >= 10 removed these legacy aliases, used here as default-argument values
+# evaluated at import time). Redundant with the patches there and in
+# detectron2/utils/env.py -- belt and suspenders given inconsistent behavior
+# observed for the central patch on some hosted environments.
+Image.NEAREST = Image.Resampling.NEAREST
+Image.BILINEAR = Image.Resampling.BILINEAR
+Image.BICUBIC = Image.Resampling.BICUBIC
+Image.LINEAR = Image.Resampling.BILINEAR
+
 from .augmentation import Augmentation, _transform_to_aug
 from .transform import ExtentTransform, ResizeTransform, RotationTransform
 
