@@ -23,21 +23,11 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-import torch  # noqa: E402
-
-from detectron2.checkpoint import DetectionCheckpointer  # noqa: E402
-from detectron2.config import get_cfg  # noqa: E402
-from detectron2.data import MetadataCatalog  # noqa: E402
-from detectron2.data.datasets import register_coco_instances  # noqa: E402
-from detectron2.modeling import build_model  # noqa: E402
-
-from hierarchialdet import add_diffusiondet_config  # noqa: E402
-from hierarchialdet.util.model_ema import (  # noqa: E402
-    add_model_ema_configs,
-    may_build_model_ema,
-    may_get_ema_checkpointer,
-    EMADetectionCheckpointer,
-)
+# torch / detectron2 / hierarchialdet are imported inside the functions that
+# need them, not at module scope: the orchestration scripts (run_curriculum,
+# run_experiments, make_results_table) only want REPO_ROOT, file_md5 and the
+# tier table, and should stay runnable -- and testable -- without a full deep
+# learning environment.
 
 # Tier index -> (short name, human-readable name). The model always carries all
 # three classification heads; the tier selects how many are used.
@@ -60,6 +50,11 @@ def tier_name(tier):
 
 def setup_cfg(config_file=None, opts=None, weights=None, device=None, freeze=True):
     """Build a config exactly the way train_net.py / demo.py do."""
+    import torch
+    from detectron2.config import get_cfg
+    from hierarchialdet import add_diffusiondet_config
+    from hierarchialdet.util.model_ema import add_model_ema_configs
+
     cfg = get_cfg()
     add_diffusiondet_config(cfg)
     add_model_ema_configs(cfg)
@@ -82,6 +77,9 @@ def register_dataset(name, json_file, image_root):
     Register a DENTEX split under `name`, tolerating repeated registration
     (scripts that sweep over several conditions re-register the same split).
     """
+    from detectron2.data import MetadataCatalog
+    from detectron2.data.datasets import register_coco_instances
+
     if name in MetadataCatalog.list():
         meta = MetadataCatalog.get(name)
         if getattr(meta, "json_file", None) == json_file:
@@ -96,6 +94,14 @@ def register_dataset(name, json_file, image_root):
 
 def build_eval_model(cfg):
     """Build the model and load MODEL.WEIGHTS, honouring the EMA setup."""
+    from detectron2.checkpoint import DetectionCheckpointer
+    from detectron2.modeling import build_model
+    from hierarchialdet.util.model_ema import (
+        may_build_model_ema,
+        may_get_ema_checkpointer,
+        EMADetectionCheckpointer,
+    )
+
     model = build_model(cfg)
     may_build_model_ema(cfg, model)
     kwargs = may_get_ema_checkpointer(cfg, model)
@@ -108,6 +114,8 @@ def build_eval_model(cfg):
 
 def thing_classes(dataset_name, tier):
     """Per-tier class-name list as attached by the bundled load_coco_json."""
+    from detectron2.data import MetadataCatalog
+
     meta = MetadataCatalog.get(dataset_name)
     return list(meta.get("thing_classes{}".format(tier + 1), []))
 
@@ -130,50 +138,43 @@ def load_pip_pycocotools():
     Faster R-CNN / DETR), whose predictions are plain COCO and must not go
     through the tier-aware fork. Returns (COCO, COCOeval).
     """
-    import site
-
-    candidates = []
-    for base in list(site.getsitepackages()) + [site.getusersitepackages()]:
-        candidates.append(os.path.join(base, "pycocotools"))
-    for pkg_dir in candidates:
-        init_py = os.path.join(pkg_dir, "__init__.py")
-        if not os.path.exists(init_py) or os.path.abspath(pkg_dir).startswith(REPO_ROOT + os.sep):
-            continue
-        modules = {}
-        for mod_name in ("_pip_pycocotools", "_pip_pycocotools.mask", "_pip_pycocotools.coco",
-                         "_pip_pycocotools.cocoeval"):
-            file_name = {
-                "_pip_pycocotools": "__init__.py",
-                "_pip_pycocotools.mask": "mask.py",
-                "_pip_pycocotools.coco": "coco.py",
-                "_pip_pycocotools.cocoeval": "cocoeval.py",
-            }[mod_name]
-            spec = importlib.util.spec_from_file_location(mod_name, os.path.join(pkg_dir, file_name))
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[mod_name] = module
-            modules[mod_name] = (spec, module)
-        # Execute in dependency order: package, mask, coco, cocoeval.
-        for mod_name in ("_pip_pycocotools", "_pip_pycocotools.mask", "_pip_pycocotools.coco",
-                         "_pip_pycocotools.cocoeval"):
-            spec, module = modules[mod_name]
-            # coco.py / cocoeval.py do `from pycocotools import mask`, which
-            # would resolve to the bundled fork. Point that name at the pip
-            # copy for the duration of the import.
-            saved = sys.modules.get("pycocotools"), sys.modules.get("pycocotools.mask")
-            sys.modules["pycocotools"] = modules["_pip_pycocotools"][1]
-            sys.modules["pycocotools.mask"] = modules["_pip_pycocotools.mask"][1]
-            try:
-                spec.loader.exec_module(module)
-            finally:
-                for key, value in zip(("pycocotools", "pycocotools.mask"), saved):
-                    if value is None:
-                        sys.modules.pop(key, None)
-                    else:
-                        sys.modules[key] = value
-        return modules["_pip_pycocotools.coco"][1].COCO, modules["_pip_pycocotools.cocoeval"][1].COCOeval
-
-    raise ImportError(
-        "Could not find a pip-installed pycocotools outside the repo. "
-        "Install it with `pip install pycocotools` -- the bundled copy at "
-        "{}/pycocotools is a 3-tier fork and cannot evaluate flat COCO data.".format(REPO_ROOT)
-    )
+    # Drop the repo root (and the implicit cwd entry, which is the repo root
+    # when scripts are launched from there) from sys.path, forget any already
+    # imported pycocotools submodules, and import again -- so the import
+    # machinery resolves the installed package instead of the fork. Everything
+    # is restored afterwards, since the rest of the process still depends on
+    # the fork.
+    saved_modules = {k: v for k, v in sys.modules.items() if k.split(".")[0] == "pycocotools"}
+    saved_path = list(sys.path)
+    try:
+        for name in list(sys.modules):
+            if name.split(".")[0] == "pycocotools":
+                del sys.modules[name]
+        sys.path = [
+            p for p in sys.path
+            if os.path.abspath(p or os.getcwd()) != REPO_ROOT
+        ]
+        importlib.invalidate_caches()
+        try:
+            coco_module = importlib.import_module("pycocotools.coco")
+            cocoeval_module = importlib.import_module("pycocotools.cocoeval")
+        except ModuleNotFoundError as exc:
+            raise ImportError(
+                "no pip-installed pycocotools available ({}). Install it with "
+                "`pip install pycocotools`; the copy bundled at {}/pycocotools is a "
+                "3-tier fork and is deliberately not used here.".format(exc, REPO_ROOT)
+            ) from exc
+        if os.path.abspath(coco_module.__file__).startswith(REPO_ROOT + os.sep):
+            raise ImportError(
+                "only found the repo's bundled pycocotools fork at {}. Install the real "
+                "one (`pip install pycocotools`) -- the fork assumes 3-tier categories and "
+                "cannot evaluate flat COCO data.".format(coco_module.__file__)
+            )
+        return coco_module.COCO, cocoeval_module.COCOeval
+    finally:
+        sys.path = saved_path
+        for name in list(sys.modules):
+            if name.split(".")[0] == "pycocotools":
+                del sys.modules[name]
+        sys.modules.update(saved_modules)
+        importlib.invalidate_caches()

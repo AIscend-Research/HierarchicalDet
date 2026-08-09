@@ -122,14 +122,13 @@ Ran against the full local `quadrant` (693 images / 2,772 annotations) and
    real training runs on the Kaggle T4 per the Phase 0 GPU benchmark), with
    zero errors up to that point.
 
-## What's NOT done yet
+## Follow-ups (resolved in Phase 3)
 
-- Not wired into `kaggle/kaggle_setup.ipynb` — the data-download cell
-  currently only extracts images for `quadrant-enumeration-disease` (the one
-  tier the official loader could already read); `quadrant`/`quadrant_enumeration`
-  images are read for stats from the zip and never extracted. Extracting
-  both (~2.4-2.7GB each) plus running this normalization script needs to be
-  added before the actual 3-stage curriculum training can run on Kaggle.
-- No decision yet on how the 3 sequential ~10.3h training stages (~30.8h
-  total, per the Phase 0 GPU benchmark) get split across Kaggle GPU
-  sessions/quota.
+- ~~Not wired into `kaggle/kaggle_setup.ipynb`~~ — Cell 2 now extracts all
+  three training tiers and runs this normalization script.
+- ~~No decision on how the 3 sequential ~10.3h training stages (~30.8h total,
+  per the Phase 0 GPU benchmark) get split across Kaggle GPU sessions/quota~~ —
+  `tools/run_curriculum.py` makes each stage independently resumable (a stage
+  with a `model_final.pth` is skipped, and an interrupted stage resumes from
+  its last checkpoint), so the curriculum is run by re-running the same cell
+  once per session against persistent storage. See `docs/phase3_pipeline.md`.

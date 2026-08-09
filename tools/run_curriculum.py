@@ -202,11 +202,16 @@ def main():
             record["steps"].append(run(cmd, env=env, dry_run=args.dry_run,
                                        log_path=os.path.join(stage_dir, "train.log")))
 
-        if os.path.exists(final_weights):
+        if args.dry_run:
+            # Carry the stage forward as if it had produced its checkpoint, so
+            # the printed plan shows the real weight transfer and the noisy-box
+            # dumps that depend on it.
+            previous_weights, previous_tier = final_weights, stage.tier
+        elif os.path.exists(final_weights):
             record["final_weights"] = final_weights
             record["final_weights_md5"] = file_md5(final_weights)
             previous_weights, previous_tier = final_weights, stage.tier
-        elif not args.dry_run:
+        else:
             raise SystemExit("{} finished but {} was not written".format(stage.name, final_weights))
 
         manifest["stages"].append(record)

@@ -84,25 +84,31 @@ def parse_label(raw_label):
     if not tokens:
         raise LabelParseError("empty label")
 
-    diagnosis = None
     numbers = []
-    unknown = []
+    words = []
     for token in tokens:
         folded = fold(token)
         if re.fullmatch(r"\d+", folded):
             numbers.append(int(folded))
-        elif folded in DIAGNOSIS_ALIASES:
-            diagnosis = DIAGNOSIS_ALIASES[folded]
         else:
-            unknown.append(token)
+            words.append(folded)
 
-    if diagnosis is None:
-        # Some labels write the diagnosis as several words split by the same
-        # separator ("derin-curuk"); retry on the joined non-numeric tokens.
-        joined = fold(" ".join(unknown))
-        if joined in DIAGNOSIS_ALIASES:
-            diagnosis = DIAGNOSIS_ALIASES[joined]
-            unknown = []
+    # Match the longest run of words first: some labels split a two-word
+    # diagnosis on the same separator ("derin-curuk"), and matching token by
+    # token would read that as plain "curuk" (Caries) and silently lose the
+    # "derin" (Deep Caries) -- a wrong label, not a failed one.
+    diagnosis = None
+    unknown = list(words)
+    for length in range(len(words), 0, -1):
+        for start in range(0, len(words) - length + 1):
+            candidate = fold(" ".join(words[start:start + length]))
+            if candidate in DIAGNOSIS_ALIASES:
+                diagnosis = DIAGNOSIS_ALIASES[candidate]
+                unknown = words[:start] + words[start + length:]
+                break
+        if diagnosis is not None:
+            break
+
     if diagnosis is None:
         raise LabelParseError(
             "no recognized diagnosis in {!r} (unmatched tokens: {}) -- "
