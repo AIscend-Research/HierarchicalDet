@@ -906,8 +906,16 @@ def bootstrap(mode: Optional[str] = None, require_gpu: bool = False,
                 gpu["count"], names, gpu["torch"], gpu["cuda"]))
         else:
             print("GPU              : none — {}".format(gpu.get("reason")))
-        print("GPU-hours spent  : {:.2f} recorded / {:.1f} estimated for this mode"
-              .format(spent, run.est_gpu_hours))
+        # est_gpu_hours is the projected TOTAL for the whole study in this run
+        # mode (nearly all of it notebook 02's training) — NOT what the current
+        # notebook will consume. Say so, or a CPU notebook printing "13.0
+        # estimated" reads as if the download were about to bill 13 GPU-hours.
+        print("GPU-hours        : {:.2f} spent so far across the study; "
+              "~{:.1f} projected total for {} mode (almost entirely notebook "
+              "02's training{})".format(
+                  spent, run.est_gpu_hours, run.mode,
+                  "" if gpu.get("available") else "; THIS session is CPU-only "
+                  "and spends none"))
         if hydrated["restored"]:
             print("restored {} result file(s) from attached datasets"
                   .format(len(hydrated["restored"])))
