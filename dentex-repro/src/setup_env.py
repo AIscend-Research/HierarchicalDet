@@ -480,12 +480,22 @@ ABI_CRITICAL = ("numpy", "torch", "torchvision")
 #: already satisfies most of these, and forcing a version is how the numpy ABI
 #: gets broken. Exact resolved versions are captured in ``requirements.lock.txt``
 #: after the fact — that file, not these specs, is what pins the environment.
+#:
+#: This list is DERIVED, not curated: it is the union of every module-level
+#: third-party import reachable from the vendored ``detectron2`` /
+#: ``hierarchialdet`` / ``pycocotools`` trees (found by AST scan — see
+#: ``tools/check_import_chain.py``, which asserts the list stays complete),
+#: plus what training needs at runtime (tensorboard for detectron2's writers,
+#: psutil for its memory logging) and what ``src/`` itself uses. A hand-picked
+#: subset of this list is exactly how a Kaggle run died on
+#: ``ModuleNotFoundError: fairscale`` four imports deep.
 REQUIREMENTS = (
     ("timm", "timm"),
     ("fvcore", "fvcore"),
     ("iopath", "iopath"),
     ("omegaconf", "omegaconf"),
     ("einops", "einops"),
+    ("fairscale", "fairscale"),
     ("cloudpickle", "cloudpickle"),
     ("termcolor", "termcolor"),
     ("tabulate", "tabulate"),
@@ -495,8 +505,16 @@ REQUIREMENTS = (
     ("scipy", "scipy"),
     ("matplotlib", "matplotlib"),
     ("pandas", "pandas"),
+    ("seaborn", "seaborn"),
     ("PIL", "pillow"),
     ("tqdm", "tqdm"),
+    ("packaging", "packaging"),
+    # pkg_resources was REMOVED from setuptools 81+. Only detectron2/model_zoo
+    # (the optional baselines path) imports it; the spec targets the last line
+    # that still ships it, and installs only when the module is missing.
+    ("pkg_resources", "setuptools<81"),
+    ("tensorboard", "tensorboard"),
+    ("psutil", "psutil"),
 )
 
 
