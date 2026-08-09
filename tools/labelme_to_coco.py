@@ -30,12 +30,7 @@ import argparse
 import json
 import os
 import re
-import sys
-from collections import Counter, defaultdict
-
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
+from collections import Counter
 
 # Turkish -> DENTEX English diagnosis class names. Keys are diacritic-stripped,
 # lowercased, whitespace-collapsed. The four target names must match

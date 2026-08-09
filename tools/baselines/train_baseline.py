@@ -24,8 +24,6 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from repro_common import REPO_ROOT  # noqa: E402
-
 import torch  # noqa: E402
 
 from detectron2 import model_zoo  # noqa: E402
@@ -33,7 +31,6 @@ from detectron2.checkpoint import DetectionCheckpointer  # noqa: E402
 from detectron2.config import get_cfg  # noqa: E402
 from detectron2.data import build_detection_test_loader, build_detection_train_loader  # noqa: E402
 from detectron2.engine import SimpleTrainer, hooks  # noqa: E402
-from detectron2.engine.train_loop import TrainerBase  # noqa: E402
 from detectron2.modeling import build_model  # noqa: E402
 from detectron2.solver import build_lr_scheduler, build_optimizer  # noqa: E402
 from detectron2.structures import BoxMode  # noqa: E402

@@ -104,10 +104,14 @@ def main():
     with open(args.json) as f:
         image_info = {im["id"]: im for im in json.load(f)["images"]}
 
+    # The bundled loader stores one id map per tier
+    # (thing_dataset_id_to_contiguous_id_1/2/3), not the single map stock
+    # detectron2 uses. Predictions come out as contiguous class indices, so map
+    # them back to this tier's dataset category ids for the `category_id` field
+    # that standard COCO tooling reads.
     metadata = MetadataCatalog.get(args.dataset_name)
-    contiguous_to_dataset = {
-        v: k for k, v in getattr(metadata, "thing_dataset_id_to_contiguous_id", {}).items()
-    }
+    tier_id_map = getattr(metadata, "thing_dataset_id_to_contiguous_id_{}".format(args.tier + 1), {})
+    contiguous_to_dataset = {v: k for k, v in tier_id_map.items()}
 
     results = []
     per_image = []
