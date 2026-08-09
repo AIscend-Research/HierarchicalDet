@@ -5,7 +5,9 @@
 # Contact: {sunpeize, cxrfzhang}@foxmail.com
 #
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import logging
 import math
+import os
 import random
 from typing import List
 from collections import namedtuple
@@ -169,10 +171,45 @@ class DiffusionDet(nn.Module):
         
         boxes_train = "ibrahim/quadrant_detection_over_enumeration_train/inference/coco_instances_results.json"
         boxes_valid = "ibrahim/quadrant_detection_over_enumeration_val/inference/coco_instances_results.json"
-        
-        
+
+
         self.train_boxes=[]
         self.valid_boxes=[]
+
+        # --- MLRC reproduction addition: inference-time prior-tier box injection ---
+        #
+        # The released code loads prior-tier ("noisy") boxes at *training* time
+        # only, through the dataset mapper. The equivalent inference-time
+        # injection -- the paper's noisy box manipulation applied when running
+        # the tier-k model -- exists in this file but is entirely commented out
+        # (see ddim_sample below and the two dead paths above), and the paths it
+        # referenced were never public. So by default this reproduction runs
+        # inference exactly as released: pure random noisy boxes, no injection.
+        #
+        # Setting NOISY_BOX_INFER to a COCO-results JSON re-enables it, which is
+        # what the hierarchical-inference-order robustness experiment needs.
+        # NOISY_BOX_INFER_JITTER / NOISY_BOX_INFER_DROP deliberately corrupt the
+        # injected prior-tier boxes (relative Gaussian jitter on normalized
+        # coordinates; random drop fraction) to measure how sensitive tier k is
+        # to imperfect tier k-1 predictions.
+        self.infer_boxes_by_image = {}
+        self.infer_box_jitter = float(os.environ.get("NOISY_BOX_INFER_JITTER", 0.0))
+        self.infer_box_drop = float(os.environ.get("NOISY_BOX_INFER_DROP", 0.0))
+        self.infer_box_score_thresh = float(os.environ.get("NOISY_BOX_INFER_SCORE", 0.5))
+        infer_boxes_path = os.environ.get("NOISY_BOX_INFER")
+        if infer_boxes_path:
+            if not os.path.exists(infer_boxes_path):
+                raise FileNotFoundError(
+                    "NOISY_BOX_INFER is set to {} but that file does not exist".format(infer_boxes_path)
+                )
+            with open(infer_boxes_path) as f_infer:
+                for record in json.load(f_infer):
+                    if record.get("score", 1.0) >= self.infer_box_score_thresh:
+                        self.infer_boxes_by_image.setdefault(record["image_id"], []).append(record["bbox"])
+            logging.getLogger(__name__).info(
+                "Inference-time noisy box injection ENABLED from %s (%d images, jitter=%.3f, drop=%.3f)",
+                infer_boxes_path, len(self.infer_boxes_by_image), self.infer_box_jitter, self.infer_box_drop,
+            )
         #f_train = open(boxes_train)
         #dict_train = json.load(f_train)
         
@@ -261,6 +298,51 @@ class DiffusionDet(nn.Module):
       
                         
     
+    def prepare_inference_noisy_boxes(self, batched_inputs, batch):
+        """
+        Build the prior-tier ("noisy") boxes to seed inference-time denoising
+        with, in the same scaled space the random proposals live in.
+
+        Returns None (i.e. behave exactly like the released code: pure noise)
+        unless NOISY_BOX_INFER was set. Boxes are read as COCO-format results
+        (absolute XYWH in original image coordinates) and normalized by each
+        image's own original height/width, matching how `images_whwh` rescales
+        boxes back inside model_predictions.
+
+        Every image in the batch must contribute the same number of boxes for
+        them to stack, so the per-image count is fixed to the smallest count in
+        the batch (in practice inference runs at batch size 1, where this is a
+        no-op).
+        """
+        if not self.infer_boxes_by_image:
+            return None
+
+        per_image = []
+        for i in range(batch):
+            input_i = batched_inputs[i]
+            boxes = list(self.infer_boxes_by_image.get(input_i["image_id"], []))
+            if self.infer_box_drop > 0 and boxes:
+                boxes = [b for b in boxes if random.random() >= self.infer_box_drop]
+            if not boxes:
+                per_image.append(torch.zeros((0, 4), device=self.device))
+                continue
+            h, w = input_i["height"], input_i["width"]
+            boxes = torch.as_tensor(boxes, dtype=torch.float, device=self.device)
+            # COCO XYWH (absolute) -> XYXY (absolute) -> normalized -> cxcywh
+            boxes[:, 2:] = boxes[:, :2] + boxes[:, 2:]
+            boxes = boxes / torch.as_tensor([w, h, w, h], dtype=torch.float, device=self.device)
+            boxes = box_xyxy_to_cxcywh(boxes)
+            if self.infer_box_jitter > 0:
+                boxes = boxes + torch.randn_like(boxes) * self.infer_box_jitter
+            boxes = torch.clamp(boxes, min=1e-4, max=1.0)
+            # Same [0,1] -> signed-scale mapping model_predictions inverts.
+            per_image.append((boxes * 2.0 - 1.0) * self.scale)
+
+        n = min(b.shape[0] for b in per_image)
+        if n == 0:
+            return None
+        return torch.stack([b[:n] for b in per_image], dim=0)
+
     def predict_noise_from_start(self, x_t, t, x0):
         return (
                 (extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - x0) /
@@ -295,40 +377,16 @@ class DiffusionDet(nn.Module):
     def ddim_sample(self, batched_inputs, backbone_feats, images_whwh, images, clip_denoised=True, do_postprocess=True, k=0):
     
         batch = images_whwh.shape[0]
-       
-        
-        bbox_pre=[]
-        """
-        for i in range(batch):
-          bbox_pretrain, sizes=self.return_boxes_for_current_image(batched_inputs[i]["image_id"])
-          
-          
-          
-          
-          bbox_pretrain = box_cxcywh_to_xyxy(torch.tensor(bbox_pretrain))
-          
-          
-          h, w = sizes[0]
-          
-          
-          
-          box_xyxy = torch.as_tensor([w, h, w, h], dtype=torch.float, device="cuda")
-          
-          
-          bbox_pretrain=bbox_pretrain.to("cuda")
-          bbox_pretrain = bbox_pretrain / box_xyxy
-          bbox_pretrain = box_xyxy_to_cxcywh(bbox_pretrain)
-          
-          bbox_pre.append(bbox_pretrain) 
-       
-        """
-        
-        #shape = (batch, self.num_proposals-len(bbox_pretrain), 4)
-        shape = (batch, self.num_proposals, 4)
-        #  print(batched_inputs)
-        
-        
-        #print(bbox_pretrain)
+
+        # Prior-tier boxes to seed the denoising process with, one tensor per
+        # image, already in the same scaled space as `img` below. Empty unless
+        # NOISY_BOX_INFER is set (see __init__) -- the released code has this
+        # path commented out entirely, so the default reproduces it exactly.
+        bbox_pre = self.prepare_inference_noisy_boxes(batched_inputs, batch)
+        num_pre = bbox_pre.shape[1] if bbox_pre is not None else 0
+
+        shape = (batch, max(self.num_proposals - num_pre, 1), 4)
+
         total_timesteps, sampling_timesteps, eta, objective = self.num_timesteps, self.sampling_timesteps, self.ddim_sampling_eta, self.objective
 
         # [-1, 0, 1, 2, ..., T-1] when sampling_timesteps == total_timesteps
@@ -337,11 +395,9 @@ class DiffusionDet(nn.Module):
         time_pairs = list(zip(times[:-1], times[1:]))  # [(T-1, T-2), (T-2, T-3), ..., (1, 0), (0, -1)]
 
         img = torch.randn(shape, device=self.device)
-        
-        #img = torch.concat((img, torch.stack(bbox_pre)),1)
+        if bbox_pre is not None:
+            img = torch.cat((img, bbox_pre), dim=1)
 
-        
-        
 
         ensemble_score, ensemble_label, ensemble_coord = [], [], []
         
@@ -394,10 +450,26 @@ class DiffusionDet(nn.Module):
             
             
             if self.box_renewal:  # filter
-                # replenish with randn boxes
-                #img = torch.cat((img, torch.randn(1, self.num_proposal-len(bbox_pretrain), 4, device=img.device)), dim=1)
-                img = torch.cat((img, torch.randn(1, self.num_proposal, 4, device=img.device)), dim=1)
-                img = torch.concat((img, torch.stack(bbox_pre)),1)
+                # Replenish the boxes dropped by the filter above back up to
+                # num_proposals, so every denoising step sees the same number of
+                # proposals.
+                #
+                # Fixed for this reproduction -- as released, these two lines
+                # crash on any run with SAMPLE_STEP > 1 (which is the only case
+                # that reaches them): `self.num_proposal` does not exist (the
+                # attribute is `num_proposals`), and `torch.stack(bbox_pre)`
+                # stacks an unconditionally-empty list. That made the diffusion
+                # step-count sensitivity experiment impossible to run at all
+                # before this fix. Replenishing `num_proposals - num_remain`
+                # (rather than a further full `num_proposals`) matches upstream
+                # DiffusionDet's ddim_sample.
+                num_replenish = int(self.num_proposals) - int(num_remain) - num_pre
+                if num_replenish > 0:
+                    img = torch.cat(
+                        (img, torch.randn(batch, num_replenish, 4, device=img.device)), dim=1
+                    )
+                if bbox_pre is not None:
+                    img = torch.cat((img, bbox_pre), dim=1)
 
             if self.use_ensemble and self.sampling_timesteps > 1:
                 

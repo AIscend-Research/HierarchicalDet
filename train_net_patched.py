@@ -54,6 +54,18 @@ from hierarchialdet.util.model_ema import add_model_ema_configs, may_build_model
     apply_model_ema_and_restore, EMADetectionCheckpointer
 
 
+def current_tier():
+    """
+    Which hierarchy tier this run trains/evaluates: 0 = quadrant,
+    1 = quadrant-enumeration, 2 = quadrant-enumeration-diagnosis. The model
+    always has all three heads (MODEL.DiffusionDet.NUM_CLASSES = [4, 8, 4]);
+    the tier only selects how many of them are used for prediction/evaluation.
+    """
+    tier = int(os.environ.get("TIER", "0"))
+    assert tier in (0, 1, 2), "TIER must be 0, 1 or 2 (got {})".format(tier)
+    return tier
+
+
 class Trainer(DefaultTrainer):
     """ Extension of the Trainer class adapted to DiffusionDet. """
 
@@ -326,14 +338,17 @@ class Trainer(DefaultTrainer):
         # model with ema weights
         logger = logging.getLogger("detectron2.trainer")
         
+        # k is the tier to evaluate at -- hardcoded to 2 (diagnosis) in the
+        # released code, which is wrong for any earlier curriculum stage.
+        k = current_tier()
         if cfg.MODEL_EMA.ENABLED:
             logger.info("Run evaluation with EMA.")
-            with apply_model_ema_and_restore(model):   
-                results = cls.test(cfg, model, evaluators=evaluators,k=2 )
-               
+            with apply_model_ema_and_restore(model):
+                results = cls.test(cfg, model, evaluators=evaluators, k=k)
+
         else:
-            results= cls.test(cfg, model, evaluators=evaluators,k=2)
-            
+            results= cls.test(cfg, model, evaluators=evaluators, k=k)
+
         return results
 
     @classmethod
@@ -402,12 +417,12 @@ class Trainer(DefaultTrainer):
         #if comm.is_main_process():
          #   ret.append(hooks.PeriodicWriter(self.build_writers(), period=20))
             
-        ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results, 0))
-        #if comm.is_main_process():
-         #   ret.append(hooks.PeriodicWriter(self.build_writers(), period=20))
-            
-        #ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results, 2))
-        
+        # The tier being trained. EvalHook's third argument is the tier index it
+        # evaluates at (the authors patched EvalHook to take it); leaving it
+        # hardcoded at 0 would score a tier-2 or tier-3 stage using only its
+        # quadrant head. TIER comes from the curriculum driver.
+        ret.append(hooks.EvalHook(cfg.TEST.EVAL_PERIOD, test_and_save_results, current_tier()))
+
         if comm.is_main_process():
             ret.append(hooks.PeriodicWriter(self.build_writers(), period=20))
         return ret
