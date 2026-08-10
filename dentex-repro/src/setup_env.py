@@ -820,6 +820,43 @@ def gpu_hours_spent() -> float:
     return total
 
 
+def discover_converted_data(search_roots: Sequence[str] = ()) -> Optional[str]:
+    """
+    Point :data:`DATA_DIR` at the converted DENTEX dataset when it arrives as an
+    *attached* Kaggle Dataset instead of having been produced in this session.
+
+    Notebook 01 writes to ``/kaggle/working/dentex_converted``; every later
+    notebook reads through ``data_convert.layout()``, which resolves
+    ``setup_env.DATA_DIR`` at call time. But attached datasets mount read-only
+    under ``/kaggle/input/<slug>/...``, so without this remap notebook 02 would
+    fail its "run notebook 01 first" assertion even with the data attached.
+    A read-only root is fine: everything ever written into the data dir is
+    written by notebook 01 itself; later notebooks only read from it.
+
+    The sentinel is ``coco/train_diagnosis.json`` — present in every complete
+    conversion, regardless of whether the attachment is the published dataset
+    (``.../dentex_converted/coco/...``) or a raw notebook-output attachment.
+    """
+    global DATA_DIR
+
+    import glob
+
+    if os.path.exists(os.path.join(DATA_DIR, "coco", "train_diagnosis.json")):
+        return None                      # local copy exists (this session ran 01)
+
+    roots = list(search_roots) or (
+        sorted(glob.glob(os.path.join(KAGGLE_INPUT, "*"))) if ON_KAGGLE else []
+    )
+    for root in roots:
+        for sentinel in glob.glob(
+                os.path.join(root, "**", "coco", "train_diagnosis.json"),
+                recursive=True):
+            DATA_DIR = os.path.dirname(os.path.dirname(sentinel))
+            os.environ["DENTEX_DATA_DIR"] = DATA_DIR
+            return DATA_DIR
+    return None
+
+
 def hydrate_from_attached_datasets(search_roots: Sequence[str] = ()) -> Dict[str, object]:
     """
     Copy accumulated results out of attached Kaggle Datasets into this session's
@@ -871,8 +908,11 @@ def bootstrap(mode: Optional[str] = None, require_gpu: bool = False,
     found = assert_vendored()
     run = resolve_run_mode(mode)
 
-    for directory in (RUNS_DIR, DATA_DIR, PAPER_ASSETS, RESULTS_RAW):
+    attached_data = discover_converted_data()
+    for directory in (RUNS_DIR, PAPER_ASSETS, RESULTS_RAW):
         os.makedirs(directory, exist_ok=True)
+    if attached_data is None:            # local (writable) data dir, maybe empty
+        os.makedirs(DATA_DIR, exist_ok=True)
     hydrated = hydrate_from_attached_datasets()
 
     gpu = gpu_report()
@@ -893,7 +933,8 @@ def bootstrap(mode: Optional[str] = None, require_gpu: bool = False,
         print("detectron2 from  : {}".format(found["detectron2"]))
         print("pycocotools from : {}".format(found["pycocotools"]))
         print("runs dir         : {}".format(RUNS_DIR))
-        print("data dir         : {}".format(DATA_DIR))
+        print("data dir         : {}{}".format(
+            DATA_DIR, "  (attached dataset, read-only)" if attached_data else ""))
         print("training seed    : {}".format(BASE_SEED))
         print("eval seeds       : {}".format(list(run.eval_seeds)))
         print("variants         : {}".format(list(run.variants)))
