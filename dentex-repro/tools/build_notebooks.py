@@ -174,12 +174,35 @@ print(json.dumps({k: v for k, v in download.items() if k != "raw_train_json"}, i
 conversion = data_convert.convert_all(download["raw_train_json"], download["test_label_dir"])
 paths = conversion["paths"]
 report = conversion["test_parse_report"]
-print("test split parsed: {} images, {} annotations, {} distinct raw label strings"
+print("test split parsed: {} images, {} annotations kept, {} distinct raw labels"
       .format(report["images"], report["annotations"], report["distinct_raw_labels"]))
-print("labels whose leading quadrant token disagreed with the FDI digit:",
-      report["quadrant_token_disagreements"])
-for raw, parsed in list(report["parsed_examples"].items())[:15]:
-    print("  {!r:38s} -> q{} t{} {}".format(raw, *parsed))
+
+# The raw test labels use a 9-code clinical scheme; only codes 1/6/7 are task
+# classes. Everything else is excluded BY NAME and counted — never silently.
+print("\\nexcluded out-of-task annotations ({} total):".format(report["excluded_total"]))
+for word, info in report["excluded_out_of_task"].items():
+    print("  {:10s} {:4d}  ({})".format(word, info["count"], info["meaning"]))
+print("class-code inconsistencies:", report["class_code_inconsistencies"])
+
+print("\\ntest-split diagnosis ground truth:")
+for name, count in report["diagnosis_histogram"].items():
+    print("  {:20s} {:4d}".format(name, count))
+
+missing = report["diagnosis_classes_without_ground_truth"]
+if missing:
+    print("\\n*** FINDING: no test ground truth for {} ***".format(missing))
+    print(data_convert.TEST_LABEL_FINDING)
+    setup_env.log_deviation(
+        "test-split ground truth missing entirely for {}".format(missing),
+        data_convert.TEST_LABEL_FINDING,
+        "01_setup_and_data",
+        impact="test-split evaluation covers {} of 4 diagnosis classes; the "
+               "missing class contributes no ground truth, so its per-class AP "
+               "is undefined and the diagnosis-tier mean AP averages over the "
+               "classes that have ground truth".format(4 - len(missing)))
+
+for raw, parsed in list(report["parsed_examples"].items())[:12]:
+    print("  {!r:26s} -> q{} t{} {}".format(raw, *parsed))
 '''),
         ("code", '''\
 # ---- Audit each split ----

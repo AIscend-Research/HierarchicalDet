@@ -355,6 +355,39 @@ DIAGNOSIS_ALIASES = {
     "lezyon": "Periapical Lesion",
 }
 
+#: Labels in the test split that are real clinical annotations but OUTSIDE the
+#: DENTEX 4-class diagnosis task. The raw test LabelMe files carry a 9-code
+#: scheme (`<code>-<word>-<FDI>`; the leading number is a CLASS CODE, not a
+#: quadrant) — verified against the full 250-file release, where every word maps
+#: to exactly one code. Only codes 1/6/7 are task classes; the rest are excluded
+#: *by name*, counted, and reported. An unknown word is still a hard error.
+OUT_OF_TASK_LABELS = {
+    "saglam": "healthy tooth (code 0)",
+    "kuretaj": "curettage (code 2)",
+    "kanal": "root canal treatment (code 3)",
+    "cekim": "extraction (code 5)",
+    "kirik": "fracture (code 8)",
+}
+
+#: Class code observed for each task word in the release, used as a consistency
+#: check during conversion (a word appearing under two codes would mean the
+#: labelling scheme is not what this converter assumes).
+EXPECTED_WORD_CODES = {
+    "saglam": 0, "curuk": 1, "kuretaj": 2, "kanal": 3,
+    "cekim": 5, "gomulu": 6, "lezyon": 7, "kirik": 8,
+}
+
+#: The finding this table encodes, stated once and reused by notebook 01.
+TEST_LABEL_FINDING = (
+    "The released DENTEX test annotations use a 9-code clinical labelling scheme "
+    "and contain NO 'Deep Caries' label: every carious tooth is plain 'çürük' "
+    "(code 1). The public test release therefore cannot distinguish Caries from "
+    "Deep Caries, so test-split evaluation covers 3 of the paper's 4 diagnosis "
+    "classes and the Deep Caries column has no ground truth. This is a property "
+    "of the data release, not of this conversion; the authors' own test file "
+    "(test_merged_disease_coco3class.json) was never published."
+)
+
 _TURKISH_FOLD = str.maketrans({
     "ç": "c", "Ç": "c", "ğ": "g", "Ğ": "g", "ı": "i", "İ": "i",
     "ö": "o", "Ö": "o", "ş": "s", "Ş": "s", "ü": "u", "Ü": "u",
@@ -363,6 +396,15 @@ _TURKISH_FOLD = str.maketrans({
 
 class LabelParseError(Exception):
     pass
+
+
+class OutOfTaskLabel(Exception):
+    """A well-understood clinical label that is not one of the 4 task classes."""
+
+    def __init__(self, word: str, description: str):
+        super().__init__("{} = {}".format(word, description))
+        self.word = word
+        self.description = description
 
 
 def _fold(text: str) -> str:
@@ -401,10 +443,15 @@ def parse_labelme_label(raw_label: str) -> Tuple[int, int, str]:
         if diagnosis is not None:
             break
     if diagnosis is None:
+        # Not a task class — but maybe a *known* out-of-task clinical label.
+        # Those are excluded by name and counted, never silently dropped.
+        for word in words:
+            if word in OUT_OF_TASK_LABELS:
+                raise OutOfTaskLabel(word, OUT_OF_TASK_LABELS[word])
         raise LabelParseError(
             "no recognized diagnosis in {!r} (unmatched tokens: {}) — extend "
-            "DIAGNOSIS_ALIASES rather than dropping the annotation"
-            .format(raw_label, unknown)
+            "DIAGNOSIS_ALIASES or OUT_OF_TASK_LABELS rather than dropping the "
+            "annotation".format(raw_label, unknown)
         )
 
     quadrant = tooth = None
@@ -448,7 +495,8 @@ def labelme_to_coco(label_dir: str, image_dir: str, canonical: dict,
 
     images, annotations, failures = [], [], []
     raw_counts, parsed_examples = Counter(), {}
-    quadrant_disagreements = 0
+    excluded_counts: Counter = Counter()
+    code_inconsistencies = 0
     annotation_id = 0
 
     for image_index, label_file in enumerate(label_files):
@@ -480,14 +528,24 @@ def labelme_to_coco(label_dir: str, image_dir: str, canonical: dict,
             raw_counts[raw] += 1
             try:
                 quadrant, tooth, diagnosis = parse_labelme_label(raw)
+            except OutOfTaskLabel as excluded:
+                excluded_counts[excluded.word] += 1
+                continue
             except LabelParseError as error:
                 failures.append((label_file, str(error)))
                 continue
             parsed_examples.setdefault(raw, (quadrant, tooth, diagnosis))
 
+            # The leading token is a CLASS CODE (`<code>-<word>-<FDI>`), not a
+            # quadrant. Check it stays consistent with the word: an
+            # inconsistency would mean the labelling scheme is not the one this
+            # converter was verified against.
             leading = re.split(r"[-_/|,]+", raw)[0].strip()
-            if leading.isdigit() and 1 <= int(leading) <= 4 and int(leading) != quadrant:
-                quadrant_disagreements += 1
+            word = next((_fold(t) for t in re.split(r"[-_/|,]+", raw)
+                         if not re.fullmatch(r"\d+", _fold(t))), None)
+            if (leading.isdigit() and word in EXPECTED_WORD_CODES
+                    and int(leading) != EXPECTED_WORD_CODES[word]):
+                code_inconsistencies += 1
 
             xs = [float(p[0]) for p in shape["points"]]
             ys = [float(p[1]) for p in shape["points"]]
@@ -509,13 +567,29 @@ def labelme_to_coco(label_dir: str, image_dir: str, canonical: dict,
             })
             annotation_id += 1
 
+    diagnosis_names = [str(c["name"]) for c in cats_3]
+    diagnosis_histogram = Counter()
+    id_to_diagnosis = {c["id"]: str(c["name"]) for c in cats_3}
+    for annotation in annotations:
+        diagnosis_histogram[id_to_diagnosis[annotation["category_id_3"]]] += 1
+
     report = {
         "images": len(images),
         "annotations": len(annotations),
         "distinct_raw_labels": len(raw_counts),
         "raw_label_counts": dict(raw_counts.most_common()),
         "parsed_examples": {k: list(v) for k, v in parsed_examples.items()},
-        "quadrant_token_disagreements": quadrant_disagreements,
+        "excluded_out_of_task": {
+            word: {"count": count, "meaning": OUT_OF_TASK_LABELS[word]}
+            for word, count in excluded_counts.most_common()
+        },
+        "excluded_total": sum(excluded_counts.values()),
+        "class_code_inconsistencies": code_inconsistencies,
+        "diagnosis_histogram": {name: diagnosis_histogram.get(name, 0)
+                                for name in diagnosis_names},
+        "diagnosis_classes_without_ground_truth": [
+            name for name in diagnosis_names if diagnosis_histogram.get(name, 0) == 0
+        ],
         "failures": [list(f) for f in failures],
     }
     if failures and strict:
