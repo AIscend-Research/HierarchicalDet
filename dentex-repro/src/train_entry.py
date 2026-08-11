@@ -326,6 +326,8 @@ if __name__ == "__main__":
     setup_env.assert_vendored()
     from detectron2.engine import launch
 
+    import datetime
+
     cli_args = get_parser().parse_args()
     print("[train_entry] args: {}".format(cli_args), flush=True)
     register_datasets_from_env()
@@ -336,4 +338,13 @@ if __name__ == "__main__":
         machine_rank=cli_args.machine_rank,
         dist_url=cli_args.dist_url,
         args=(cli_args,),
+        # detectron2 defaults to 30 minutes. When one rank dies or exits early,
+        # the survivor blocks in a collective for that entire window before the
+        # NCCL watchdog aborts -- a real run burned 30 minutes of GPU quota
+        # waiting on a peer that had already left, and the traceback that
+        # finally surfaced pointed at the watchdog rather than the cause.
+        # 8 minutes is far longer than any collective here (a ~9 s step, a
+        # ~1 GB checkpoint save) and turns a silent 30-minute stall into a
+        # prompt failure.
+        timeout=datetime.timedelta(minutes=8),
     )
