@@ -472,15 +472,19 @@ shutil.rmtree(probe_dir, ignore_errors=True)
 print(json.dumps(ddp, indent=2), "-> NUM_GPUS =", NUM_GPUS)
 '''),
         ("code", '''\
-# ---- Pre-flight: 200 iterations + a real evaluation, on 10 images ----
-# Proves the whole chain before committing hours of quota to it. Skipped when
-# RUN_MODE="smoke", where the real runs below already are exactly this.
+# ---- Pre-flight: a short real run + a real evaluation, on 10 images ----
+# Proves the whole chain end to end before committing hours of quota to it.
+# Skipped when RUN_MODE="smoke", where the real runs below already are exactly
+# this. 30 iterations, not 200: at the measured 9.13 s/iter on T4 x2, 200 would
+# spend half an hour of the training budget proving plumbing.
+PREFLIGHT_ITERS = 30
 smoke = {"skipped": run.is_smoke}
 if not run.is_smoke and not train_utils.is_complete("preflight"):
     smoke_dir = train_utils.run_dir("preflight")
     train_utils.launch_training(
         CFG["diagnosis"],
-        train_utils.base_overrides(run, smoke_dir, 200, IMAGENET_WEIGHTS, NUM_GPUS),
+        train_utils.base_overrides(run, smoke_dir, PREFLIGHT_ITERS,
+                                   IMAGENET_WEIGHTS, NUM_GPUS),
         registration.training_env("diagnosis_train"), smoke_dir, NUM_GPUS, resume=False)
     smoke_weights = os.path.join(smoke_dir, "model_final.pth")
     assert os.path.exists(smoke_weights), "pre-flight produced no model_final.pth"
