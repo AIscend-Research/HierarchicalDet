@@ -119,23 +119,83 @@ def read_run_record(name: str) -> Optional[Dict[str, object]]:
         return json.load(handle)
 
 
-def prune_checkpoints(name: str, keep: Sequence[str] = ()) -> List[str]:
+def disk_free_gb(path: str = None) -> float:
+    """Free space on the filesystem holding the run outputs."""
+    usage = shutil.disk_usage(path or setup_env.RUNS_ROOT)
+    return usage.free / (1024 ** 3)
+
+
+def slim_checkpoint(path: str) -> Dict[str, object]:
     """
-    Delete numbered intermediate checkpoints, keeping ``model_final.pth``, the
-    named trajectory snapshots, and the most recent numbered checkpoint (the
-    resume point). ``/kaggle/working`` is capped at ~20 GB and one Swin-B
-    checkpoint is ~1 GB, so this is not optional housekeeping.
+    Strip the optimizer state out of a checkpoint, keeping only model weights.
+
+    A Swin-B + DiffusionDet checkpoint is ~2.0 GB, and **two thirds of that is
+    AdamW's two moment tensors**. Those are needed only to *resume* a run — a
+    completed stage is never resumed, and weight transfer and evaluation both
+    load model weights alone. Keeping them cost a real run its whole session:
+    six checkpoints across three stages filled ``/kaggle/working`` (~20 GB) and
+    training died at iteration 899 of 900 with ``No space left on device``.
+
+    Only ever call this on checkpoints that are final for their purpose
+    (``model_final``, trajectory snapshots). Numbered checkpoints of a run still
+    in flight must keep their optimizer state or the resume is worthless.
+    """
+    import torch
+
+    before = os.path.getsize(path)
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(checkpoint, dict) or "model" not in checkpoint:
+        return {"path": path, "skipped": "not a checkpoint dict"}
+    if "optimizer" not in checkpoint and "scheduler" not in checkpoint:
+        return {"path": path, "skipped": "already slim", "bytes": before}
+    slim = {"model": checkpoint["model"]}
+    for key in ("iteration", "matching_heuristics"):
+        if key in checkpoint:
+            slim[key] = checkpoint[key]
+    temporary = path + ".slim"
+    torch.save(slim, temporary)
+    os.replace(temporary, path)
+    after = os.path.getsize(path)
+    return {"path": path, "bytes_before": before, "bytes_after": after,
+            "freed_gb": round((before - after) / (1024 ** 3), 2)}
+
+
+def prune_checkpoints(name: str, keep: Sequence[str] = (),
+                      complete: bool = False) -> Dict[str, object]:
+    """
+    Reclaim disk after a stage.
+
+    ``complete=True`` (the stage produced ``model_final.pth``) is aggressive:
+    every numbered checkpoint goes, because a finished run is never resumed,
+    and ``model_final`` plus the trajectory snapshots are slimmed to weights
+    only. That takes a finished stage from ~4 GB to ~0.7 GB.
+
+    Otherwise the newest numbered checkpoint is kept intact — it is the resume
+    point for an interrupted run, and it needs its optimizer state.
     """
     directory = run_dir(name)
-    keep_names = {"model_final.pth", "last_checkpoint"} | {k + ".pth" for k in keep}
     numbered = sorted(glob.glob(os.path.join(directory, "model_[0-9]*.pth")))
-    removed = []
-    for path in numbered[:-1]:                       # keep the newest numbered one
-        if os.path.basename(path) in keep_names:
-            continue
+    removed, slimmed = [], []
+
+    survivors = numbered if complete else numbered[:-1]
+    for path in survivors:
         os.remove(path)
-        removed.append(path)
-    return removed
+        removed.append(os.path.basename(path))
+
+    if complete:
+        finals = [os.path.join(directory, "model_final.pth")]
+        finals += [os.path.join(directory, k + ".pth") for k in keep]
+        for path in finals:
+            if os.path.exists(path):
+                slimmed.append(slim_checkpoint(path))
+        # last_checkpoint points at a file that may no longer exist; a completed
+        # run is skipped rather than resumed, so it is dead weight either way.
+        marker = os.path.join(directory, "last_checkpoint")
+        if os.path.exists(marker):
+            os.remove(marker)
+
+    return {"removed": removed, "slimmed": slimmed,
+            "disk_free_gb": round(disk_free_gb(), 2)}
 
 
 # --------------------------------------------------------------------------
@@ -186,11 +246,21 @@ def seed_from_attached_datasets(name: str,
     # detectron2 resumes from whatever `last_checkpoint` names.
     with open(os.path.join(destination, "last_checkpoint"), "w") as handle:
         handle.write(os.path.basename(best))
-    # Carry the sibling record forward so budget accounting stays continuous.
     sibling = os.path.join(os.path.dirname(best), "run_record.json")
-    if os.path.exists(sibling) and not os.path.exists(
-            os.path.join(destination, "run_record.prev.json")):
-        shutil.copy2(sibling, os.path.join(destination, "run_record.prev.json"))
+    if os.path.exists(sibling):
+        if best.endswith("model_final.pth"):
+            # The stage FINISHED in an earlier session. `is_complete` requires
+            # both model_final.pth and run_record.json, so restoring only the
+            # weights would leave the stage looking unfinished and retrain it
+            # from scratch -- hours of GPU quota to reproduce a checkpoint that
+            # was sitting right there.
+            target = os.path.join(destination, "run_record.json")
+            if not os.path.exists(target):
+                shutil.copy2(sibling, target)
+        elif not os.path.exists(os.path.join(destination, "run_record.prev.json")):
+            # Interrupted run: keep the record for budget accounting, but do
+            # NOT make the stage look complete -- it has to resume and finish.
+            shutil.copy2(sibling, os.path.join(destination, "run_record.prev.json"))
     return local
 
 
@@ -513,6 +583,21 @@ def train_stage(name: str, config_file: str, cfg_run, train_split: str,
         record["name"] = name
         return record
 
+    # A stage needs room for one in-flight numbered checkpoint plus its final
+    # and trajectory snapshots. Checking here turns "died at iteration 899 of
+    # 900 after 3.4 hours" into a message before any GPU time is spent.
+    free = disk_free_gb()
+    needed = 2.5 + 0.8 * (1 + len(trajectory_fractions))
+    if free < needed:
+        raise RuntimeError(
+            "only {:.1f} GB free on {} but {} needs ~{:.1f} GB (one in-flight "
+            "checkpoint plus its final and trajectory snapshots).\n"
+            "Free space first: completed stages under {} can be slimmed with "
+            "train_utils.prune_checkpoints(<name>, complete=True), and old run "
+            "modes' directories can be deleted outright."
+            .format(free, setup_env.RUNS_ROOT, name, needed, setup_env.RUNS_ROOT)
+        )
+
     plan = resolve_max_iter(budget, calibration)
     trajectory = trajectory_map(plan["max_iter"], trajectory_fractions)
 
@@ -551,7 +636,14 @@ def train_stage(name: str, config_file: str, cfg_run, train_split: str,
     })
     with open(os.path.join(directory, "run_record.json"), "w") as handle:
         json.dump(record, handle, indent=2)
-    prune_checkpoints(name, keep=list(trajectory.values()))
+    # The stage is done, so its optimizer state is dead weight: strip it and
+    # drop every numbered checkpoint. Without this a 3-stage run overruns
+    # /kaggle/working (~20 GB) partway through the third stage.
+    record["disk"] = prune_checkpoints(
+        name, keep=list(trajectory.values()),
+        complete=os.path.exists(os.path.join(directory, "model_final.pth")))
+    print("[{}] disk reclaimed; {:.1f} GB free".format(
+        name, record["disk"]["disk_free_gb"]))
     return record
 
 

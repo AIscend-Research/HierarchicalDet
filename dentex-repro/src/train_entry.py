@@ -117,6 +117,15 @@ def build_hook_classes():
             name = self.iteration_to_name.get(self.trainer.iter + 1)
             if name:
                 self.checkpointer.save(name)
+                # Trajectory snapshots exist only to be evaluated, never
+                # resumed, so drop the optimizer state immediately (~2.0 GB ->
+                # ~0.7 GB each). Two per variant across three variants is 8 GB
+                # of a ~20 GB disk if left whole.
+                from src.train_utils import slim_checkpoint
+
+                path = os.path.join(self.checkpointer.save_dir, name + ".pth")
+                if os.path.exists(path):
+                    print("[trajectory] {}".format(slim_checkpoint(path)), flush=True)
 
     class HeartbeatHook(HookBase):
         """Periodic JSON: iteration, throughput, latest losses, ETA."""
@@ -234,9 +243,21 @@ def main(args):
     budget_seconds = float(args.budget_seconds or 0.0)
     heartbeat_path = args.heartbeat or os.path.join(cfg.OUTPUT_DIR, "heartbeat.json")
 
+    from detectron2.engine import hooks as d2_hooks
+
     class ReproTrainer(Trainer):
         def build_hooks(self):
             hooks_list = super().build_hooks()
+            # Bound the periodic checkpointer to ONE numbered checkpoint.
+            # Upstream keeps every one, so a 900-iteration stage checkpointing
+            # every 225 accumulated four ~2.0 GB files and, with two earlier
+            # stages on disk, filled /kaggle/working at iteration 899 of 900.
+            # One is all a resume needs.
+            hooks_list = [h for h in hooks_list
+                          if not isinstance(h, d2_hooks.PeriodicCheckpointer)]
+            if comm.is_main_process():
+                hooks_list.append(d2_hooks.PeriodicCheckpointer(
+                    self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD, max_to_keep=1))
             extra = [HeartbeatHook(heartbeat_path, args.heartbeat_period,
                                    cfg.SOLVER.MAX_ITER, budget_seconds)]
             if trajectory:
