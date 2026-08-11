@@ -86,7 +86,18 @@ class Trainer(DefaultTrainer):
         
         
         
-        model = create_ddp_model(model, broadcast_buffers=False)
+        # find_unused_parameters is REQUIRED for the curriculum's early stages:
+        # the quadrant/enumeration stages deliberately leave the later
+        # classification heads unsupervised (their tier's labels are null), so
+        # class_logits_enumeration / class_logits_disease receive no gradient
+        # -- 24 parameters across the 6 head stages -- and default DDP aborts
+        # at iteration 2 with "Expected to have finished reduction in the
+        # prior iteration" (observed on a real Kaggle T4 x2 run). Numerically
+        # this changes nothing; it only lets DDP skip the unused parameters
+        # during gradient reduction. Single-GPU runs are unaffected
+        # (create_ddp_model returns the bare model at world size 1).
+        model = create_ddp_model(model, broadcast_buffers=False,
+                                 find_unused_parameters=True)
         
         
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(

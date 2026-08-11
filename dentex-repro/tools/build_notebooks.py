@@ -438,6 +438,12 @@ print("GPU-hours already recorded on disk: {:.2f}".format(setup_env.gpu_hours_sp
 # ---- Does multi-GPU actually work in this Kaggle session? ----
 # Answered by running a real 20-iteration job, not assumed. A failure falls back
 # to one GPU and is recorded, rather than being fought for the rest of the study.
+#
+# The probe uses the QUADRANT stage deliberately: it is the worst case for DDP,
+# because its data leaves the enumeration/disease heads unsupervised, so those
+# parameters receive no gradient. A probe on the diagnosis stage (all heads
+# supervised) once passed while the real quadrant run then died at iteration 2
+# -- the probe must exercise the shape that actually breaks.
 import shutil
 
 ddp = {"requested": NUM_GPUS, "works": None, "error": None}
@@ -445,9 +451,9 @@ probe_dir = os.path.join(setup_env.RUNS_DIR, "ddp_probe")
 if NUM_GPUS > 1 and not os.path.exists(os.path.join(setup_env.RUNS_DIR, ".ddp_ok")):
     try:
         train_utils.launch_training(
-            CFG["diagnosis"],
+            CFG["quadrant"],
             train_utils.base_overrides(run, probe_dir, 20, IMAGENET_WEIGHTS, NUM_GPUS),
-            registration.training_env("diagnosis_train"), probe_dir, NUM_GPUS,
+            registration.training_env("quadrant_train"), probe_dir, NUM_GPUS,
             resume=False, log_name="ddp_probe.log")
         ddp["works"] = True
         open(os.path.join(setup_env.RUNS_DIR, ".ddp_ok"), "w").close()
