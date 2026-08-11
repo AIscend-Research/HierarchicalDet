@@ -528,7 +528,8 @@ for key, split in (("NOISY_BOX_TRAIN", "quadrant_enumeration_train"),
     output = os.path.join(NOISY_DIR, "quadrant_over_{}.json".format(split))
     if not os.path.exists(output):
         print(json.dumps(eval_utils.dump_predictions(
-            QUADRANT_WEIGHTS, CFG["quadrant"], split, 0, output, seed=0), indent=2)[:900])
+            QUADRANT_WEIGHTS, CFG["quadrant"], split, 0, output, seed=0,
+            limit=run.eval_limit), indent=2)[:900])
     enum_boxes[key] = output
 print(enum_boxes)
 '''),
@@ -554,7 +555,8 @@ for key, split in (("NOISY_BOX_TRAIN", "diagnosis_train"),
     output = os.path.join(NOISY_DIR, "enumeration_over_{}.json".format(split))
     if not os.path.exists(output):
         print(json.dumps(eval_utils.dump_predictions(
-            ENUM_WEIGHTS, CFG["enumeration"], split, 1, output, seed=0), indent=2)[:900])
+            ENUM_WEIGHTS, CFG["enumeration"], split, 1, output, seed=0,
+            limit=run.eval_limit), indent=2)[:900])
     diagnosis_boxes[key] = output
 
 # Also produced here because notebook 03's fault-injection experiment needs the
@@ -562,7 +564,7 @@ for key, split in (("NOISY_BOX_TRAIN", "diagnosis_train"),
 prior_test = os.path.join(NOISY_DIR, "enumeration_over_diagnosis_test.json")
 if not os.path.exists(prior_test):
     eval_utils.dump_predictions(ENUM_WEIGHTS, CFG["enumeration"], "diagnosis_test", 1,
-                                prior_test, seed=0)
+                                prior_test, seed=0, limit=run.eval_limit)
 
 box_stats = {key: degradations.summarize_prediction_file(path)
              for key, path in diagnosis_boxes.items()}

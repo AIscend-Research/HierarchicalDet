@@ -69,15 +69,41 @@ One switch, set in the parameter cell of every notebook.
 | `budget` | 15k / 15k / 20k iterations | ~30 | full matrix at half the paper's schedules. |
 | `full` | 30k / 30k / 40k — the repo's own | ~60 | paper-fidelity, all three base-DiffusionDet tiers. |
 
+### Measured throughput, and what it costs
+
+On Kaggle **T4 x2** with the released settings (Swin-B, 1000 proposals, batch 2
+= 1 per GPU, AMP), a real run measured **9.13 s/iteration** at 13.9 GB peak
+of 16 GB. Everything below follows from that number:
+
+| stage | budget | iterations you actually get |
+|---|---|---|
+| quadrant | 1.75 h | ~600 |
+| enumeration | 1.75 h | ~600 |
+| each diagnosis variant | 2.75 h | ~900 |
+
+Against the paper's 30k / 30k / 40k, `micro` trains at roughly **2% of the
+original schedule**. That is a real limitation and the reason the
+checkpoint-trajectory analysis exists: it tests directly whether the ablation
+ordering is stable across training progress, turning the compute constraint
+into a result rather than only a caveat. Absolute AP will land well below the
+paper's; the *comparison between variants*, at matched budgets, is what this
+run mode buys.
+
 ### How the hour cap holds
 
-`micro` does not guess an iteration count. Notebook 02 runs **500 genuine
-training iterations**, discards 100 warm-up iterations, measures it/s, and
+`micro` does not guess an iteration count. Notebook 02 trains for a fixed
+**5 minutes of wall clock**, discards 5 warm-up iterations, measures it/s, and
 converts each hour budget into `MAX_ITER = remaining_seconds × measured_rate`,
 rounded down to a multiple of 300 (so the 1/3 and 2/3 trajectory snapshots land
 on whole iterations). A `TimeBudgetHook` enforces the wall-clock cap regardless,
 saving `model_final.pth` if it fires. On slower hardware you get fewer
 iterations, never more hours.
+
+The probe is time-bounded rather than iteration-bounded for a measured reason:
+a fixed 500-iteration probe costs 76 minutes at 9.13 s/iter — 72% of the whole
+quadrant budget — and would have left that stage just 300 iterations. The
+probe is also charged to the budget exactly once for the whole study, not once
+per stage.
 
 The measurement is cached and shared, so **all three diagnosis variants get the
 same `MAX_ITER`** — their budgets are identical by construction, not
@@ -95,7 +121,7 @@ would only add cross-notebook state to lose.
 | # | Notebook | Accelerator | Attach | Wall time (`micro`) | Produces |
 |---|---|---|---|---|---|
 | 1 | `01_setup_and_data` | **None** (CPU, free) | — | ~50 min | pinned env + vendored-import proof, converted COCO, audit table, GT figure, clean/stress subsets → `dentex-repro-data` |
-| 2 | `02_train_all` | **T4 x2** | data (+ ckpts on re-runs) | ~12.25 h, **across sessions** | DDP verdict, pre-flight smoke, calibration, quadrant + enumeration, noisy-box dumps, all diagnosis variants + trajectory snapshots, base DiffusionDet → `dentex-repro-ckpts` |
+| 2 | `02_train_all` | **T4 x2** | data (+ ckpts on re-runs) | ~11 h, **across sessions** (smoke: ~1.5 h) | DDP verdict, pre-flight smoke, calibration, quadrant + enumeration, noisy-box dumps, all diagnosis variants + trajectory snapshots, base DiffusionDet → `dentex-repro-ckpts` |
 | 3 | `03_evaluate_and_build_assets` | **T4**, then **None** | data, ckpts | ~2.5 h on GPU, ~5 min on CPU | all metrics × 3 seeds, trajectory sweep, step sweep, degradation grid, clean/stress, fault injection, error analysis, qualitative figures, and every file in `paper_assets/` |
 | opt | `opt_baselines_and_simmim` | T4 | data | ~1 GPU-h per baseline; 10+ h for SimMIM | baseline rows; closes the pretraining deviation |
 
@@ -117,8 +143,15 @@ minutes without touching the quota.
 
 ### Smoke first
 
-Set `RUN_MODE = "smoke"` and run 01 → 02 → 03. About 0.6 GPU-h total, and it
-exercises every experiment class end to end. Only then switch to `micro`.
+Set `RUN_MODE = "smoke"` and run 01 → 02 → 03. Budget about **1.5 GPU-h for
+notebook 02** and ~0.5 h for notebook 03 — at 9.13 s/iter a 200-iteration stage
+is ~30 min, and there are seven of them plus the prediction dumps. It exercises
+every experiment class end to end. Only then switch to `micro`.
+
+Run outputs and raw results are **scoped by run mode** (`runs/<mode>/`,
+`results_raw/<mode>/`). Without that, a finished 200-iteration smoke checkpoint
+would make the real `micro` run skip training entirely and silently build the
+paper out of smoke-mode models.
 
 ---
 

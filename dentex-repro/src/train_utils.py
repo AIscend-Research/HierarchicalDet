@@ -35,10 +35,21 @@ SWIN_B_FILENAME = "swin_base_patch4_window7_224_22k.pth"
 #: Checkpoint cadence asked for by the runbook (survives a session kill).
 CHECKPOINT_PERIOD = 2500
 
-#: Iterations used to measure throughput, and how many of them to discard as
-#: warm-up (CUDA autotuning, dataloader spin-up, first-touch allocation).
-CALIBRATION_ITERS = 500
-CALIBRATION_WARMUP = 100
+#: Throughput calibration is bounded by **wall time, not iteration count**.
+#:
+#: A fixed 500-iteration probe was measured at 9.13 s/iter on Kaggle's T4 x2
+#: (Swin-B, 1000 proposals, batch 2) — that is 76 minutes, or 72% of the entire
+#: 1.75 h quadrant budget, spent measuring instead of training. A time bound
+#: costs the same on any hardware: fast GPUs contribute more samples, slow ones
+#: fewer, and neither overruns.
+CALIBRATION_SECONDS = 300
+#: Iterations discarded before measuring: the first step pays CUDA autotuning
+#: and dataloader spin-up (measured data_time 10.5 s on iteration 1, then
+#: 0.005 s), so a handful is enough.
+CALIBRATION_WARMUP = 5
+#: Upper bound on probe iterations; the wall-clock hook is what actually stops
+#: it, so this only needs to be unreachable on plausible hardware.
+CALIBRATION_MAX_ITERS = 100000
 
 
 # --------------------------------------------------------------------------
@@ -140,12 +151,16 @@ def seed_from_attached_datasets(name: str,
     if os.path.exists(os.path.join(destination, "model_final.pth")):
         return None
 
+    # Only ever resume from a checkpoint produced under the SAME run mode: run
+    # directories are mode-scoped precisely so a 200-iteration smoke checkpoint
+    # can never be picked up as the starting point of a real run.
+    mode = setup_env.ACTIVE_MODE
     candidates: List[str] = []
     for root in roots:
-        candidates.extend(glob.glob(os.path.join(root, "**", "runs", name, "model_*.pth"),
-                                    recursive=True))
-        candidates.extend(glob.glob(os.path.join(root, "**", name, "model_*.pth"),
-                                    recursive=True))
+        candidates.extend(glob.glob(
+            os.path.join(root, "**", "runs", mode, name, "model_*.pth"), recursive=True))
+        candidates.extend(glob.glob(
+            os.path.join(root, "**", mode, name, "model_*.pth"), recursive=True))
     if not candidates:
         return None
 
@@ -337,11 +352,11 @@ def calibration_path(tag: str) -> str:
 
 def calibrate_rate(tag: str, config_file: str, cfg_run, train_split: str,
                    weights: str, num_gpus: int, data_dir: Optional[str] = None,
-                   iterations: int = CALIBRATION_ITERS,
+                   seconds: float = CALIBRATION_SECONDS,
                    force: bool = False) -> Dict[str, object]:
     """
     Measure real iterations/second for this stage on this hardware, by running
-    ``iterations`` genuine training steps and discarding the warm-up.
+    genuine training steps for ``seconds`` of wall clock and discarding warm-up.
 
     Cached per ``tag`` so the three diagnosis variants share one measurement —
     which is the point: they then also share one ``MAX_ITER``, making their
@@ -360,13 +375,17 @@ def calibrate_rate(tag: str, config_file: str, cfg_run, train_split: str,
         shutil.rmtree(probe_dir)
     os.makedirs(probe_dir, exist_ok=True)
 
-    overrides = base_overrides(cfg_run, probe_dir, iterations, weights, num_gpus,
-                               extra=["SOLVER.CHECKPOINT_PERIOD", str(iterations * 10)])
-    launch_training(
+    overrides = base_overrides(
+        cfg_run, probe_dir, CALIBRATION_MAX_ITERS, weights, num_gpus,
+        # No periodic checkpoints: the probe's weights are thrown away, and
+        # writing a ~1 GB Swin-B checkpoint mid-probe would corrupt the very
+        # throughput number being measured.
+        extra=["SOLVER.CHECKPOINT_PERIOD", str(CALIBRATION_MAX_ITERS * 10)])
+    launch = launch_training(
         config_file, overrides,
         registration.training_env(train_split, data_dir=data_dir),
         probe_dir, num_gpus, resume=False, rate_probe=path,
-        log_name="calibration.log",
+        budget_seconds=seconds, log_name="calibration.log",
     )
     with open(path) as handle:
         measured = json.load(handle)
@@ -375,8 +394,11 @@ def calibrate_rate(tag: str, config_file: str, cfg_run, train_split: str,
     measured.update({
         "tag": tag, "config_file": os.path.abspath(config_file),
         "num_gpus": num_gpus, "ims_per_batch": cfg_run.ims_per_batch * max(1, num_gpus),
-        "probe_iterations": iterations, "cached": False,
-        "probe_seconds": round(iterations / measured["iters_per_second"], 1),
+        "cached": False,
+        # Charge the probe's TRUE cost (model build + steps), not an idealised
+        # iterations/rate figure, so the hour cap accounts for real time spent.
+        "probe_seconds": launch["wall_seconds"],
+        "probe_budget_seconds": seconds,
     })
     with open(path, "w") as handle:
         json.dump(measured, handle, indent=2)
@@ -429,7 +451,7 @@ def resolve_max_iter(budget: StageBudget, calibration: Optional[Dict[str, object
     return {
         "max_iter": max_iter,
         "source": "calibrated from {:.4f} it/s over {} probe iterations".format(
-            calibration["iters_per_second"], calibration.get("probe_iterations")),
+            calibration["iters_per_second"], calibration.get("iterations_timed")),
         "budget_hours": budget.hours,
         "budget_seconds": remaining,
         "probe_seconds_charged": probe_seconds,

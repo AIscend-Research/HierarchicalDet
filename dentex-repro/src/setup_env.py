@@ -44,13 +44,27 @@ ON_KAGGLE = os.path.isdir("/kaggle/working")
 KAGGLE_WORKING = "/kaggle/working"
 KAGGLE_INPUT = "/kaggle/input"
 
-#: Where runs write checkpoints, predictions and metric JSONs. On Kaggle this
-#: must be under /kaggle/working to survive "Save Version"; locally it is a
-#: sibling of the project so a `git status` stays clean.
-RUNS_DIR = os.environ.get(
+#: The active run mode, read at import time. The notebooks' parameter cell sets
+#: ``RUN_MODE`` in the environment *before* importing this package, so every
+#: mode-scoped path below resolves consistently across a session.
+ACTIVE_MODE = (os.environ.get("RUN_MODE") or "micro").strip().lower()
+
+#: Root of all run outputs. On Kaggle this must be under /kaggle/working to
+#: survive "Save Version"; locally it is a sibling of the project so a
+#: `git status` stays clean.
+RUNS_ROOT = os.environ.get(
     "DENTEX_RUNS_DIR",
     os.path.join(KAGGLE_WORKING, "runs") if ON_KAGGLE else os.path.join(PROJECT_ROOT, "runs"),
 )
+
+#: Where THIS run mode writes checkpoints, predictions and metric JSONs.
+#:
+#: Scoping by mode is a correctness requirement, not tidiness. Runs are skipped
+#: when their ``model_final.pth`` already exists, so an unscoped directory means
+#: a 200-iteration ``smoke`` checkpoint would make the real ``micro`` run skip
+#: training entirely and silently build the paper from smoke-mode models. Mode
+#: in the path makes that impossible.
+RUNS_DIR = os.path.join(RUNS_ROOT, ACTIVE_MODE)
 
 #: Converted DENTEX (notebook 01's output, republished as a Kaggle Dataset).
 DATA_DIR = os.environ.get(
@@ -59,7 +73,11 @@ DATA_DIR = os.environ.get(
     else os.path.join(PROJECT_ROOT, "dentex_converted"),
 )
 
-RESULTS_RAW = os.path.join(PAPER_ASSETS, "results_raw")
+#: Raw metric JSONs, scoped by mode for the same reason ``RUNS_DIR`` is: result
+#: files are addressed by name, so an unscoped directory would let a stale
+#: smoke-mode metric survive under a micro-mode filename and be cited as a real
+#: number. Notebook 03 therefore only ever sees the active mode's results.
+RESULTS_RAW = os.path.join(PAPER_ASSETS, "results_raw", ACTIVE_MODE)
 DEVIATIONS_MD = os.path.join(PAPER_ASSETS, "deviations.md")
 
 #: The repo's own seed (configs/Base-DiffusionDet.yaml). Used as the training
@@ -804,9 +822,9 @@ def gpu_hours_spent() -> float:
     silently overruns the weekly Kaggle quota.
     """
     total = 0.0
-    if not os.path.isdir(RUNS_DIR):
+    if not os.path.isdir(RUNS_ROOT):
         return 0.0
-    for root, _dirs, files in os.walk(RUNS_DIR):
+    for root, _dirs, files in os.walk(RUNS_ROOT):   # every mode, not just this one
         if "run_record.json" not in files:
             continue
         try:
@@ -888,12 +906,16 @@ def hydrate_from_attached_datasets(search_roots: Sequence[str] = ()) -> Dict[str
                     continue
                 target = os.path.join(PAPER_ASSETS, relative)
                 if os.path.isdir(origin):
-                    os.makedirs(target, exist_ok=True)
-                    for name in os.listdir(origin):
-                        if not os.path.exists(os.path.join(target, name)):
-                            shutil.copy2(os.path.join(origin, name),
-                                         os.path.join(target, name))
-                            restored.append(os.path.join(relative, name))
+                    # results_raw is nested by run mode, so walk it rather than
+                    # copying one flat level.
+                    for directory, _subdirs, names in os.walk(origin):
+                        local = os.path.join(target, os.path.relpath(directory, origin))
+                        os.makedirs(local, exist_ok=True)
+                        for name in names:
+                            if not os.path.exists(os.path.join(local, name)):
+                                shutil.copy2(os.path.join(directory, name),
+                                             os.path.join(local, name))
+                                restored.append(os.path.join(relative, name))
                 elif not os.path.exists(target):
                     shutil.copy2(origin, target)
                     restored.append(relative)
