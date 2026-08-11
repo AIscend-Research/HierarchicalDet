@@ -21,12 +21,14 @@ Usage:  python tools/build_notebooks.py
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(HERE)
 NOTEBOOKS_DIR = os.path.join(PROJECT_ROOT, "notebooks")
+BUILD_FINGERPRINTS = {}
 
 
 # --------------------------------------------------------------------------
@@ -36,6 +38,8 @@ PARAMS = '''\
 # ============================================================================
 # PARAMETERS — this cell is identical in all three notebooks.
 # ============================================================================
+NOTEBOOK_NAME = "@NAME@"    # identity + build fingerprint of THESE cells;
+NOTEBOOK_BUILD = "@BUILD@"  # checked against the repo so stale cells fail loudly
 RUN_MODE = "micro"          # "smoke" | "micro" (default) | "budget" | "full"
 NUM_GPUS = None             # None = use every visible GPU; set 1 to force single-GPU
 PUBLISH_KAGGLE_DATASET = True
@@ -69,6 +73,9 @@ ENVIRONMENT = '''\
 import json
 from src import setup_env
 
+# `git pull` above refreshed src/ and configs_repro/ -- but NOT these cells,
+# which are the copy uploaded to Kaggle. Fail loudly rather than run a mix.
+print("notebook build:", setup_env.assert_notebook_current(NOTEBOOK_NAME, NOTEBOOK_BUILD))
 setup_env.install_dependencies()
 # The vendored pycocotools ships Python sources only; its compiled `_mask`
 # extension is grafted in here and VERIFIED BY IMPORT. It is compiled against
@@ -1643,6 +1650,13 @@ NOTEBOOKS = {
 
 
 def build(name, cells):
+    # Fingerprint the cells as generated (placeholders intact), then substitute.
+    # Both sides hash the same placeholder form, so this stays self-consistent.
+    stamped = [(kind, source.replace("@NAME@", name)) for kind, source in cells]
+    digest = hashlib.sha256(
+        "\0".join(source for _kind, source in stamped).encode()).hexdigest()[:12]
+    cells = [(kind, source.replace("@BUILD@", digest)) for kind, source in stamped]
+    BUILD_FINGERPRINTS[name] = digest
     payload = {
         "cells": [
             {"cell_type": kind,
@@ -1680,7 +1694,14 @@ def main():
             if kind == "code":
                 ast.parse(source)          # a generated notebook must at least parse
         path = build(name, cells)
-        print("wrote {} ({} cells)".format(path, len(cells)))
+        print("wrote {} ({} cells, build {})".format(
+            path, len(cells), BUILD_FINGERPRINTS[name]))
+
+    fingerprints = os.path.join(PROJECT_ROOT, "src", "notebook_build.json")
+    with open(fingerprints, "w") as handle:
+        json.dump(BUILD_FINGERPRINTS, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    print("wrote {}".format(fingerprints))
 
 
 if __name__ == "__main__":

@@ -189,6 +189,15 @@ writes it to the summary.
 
 ## 5. Things that will bite you
 
+* **The notebook cells do not update with `git pull`.** The parameter cell
+  refreshes `src/` and `configs_repro/` from GitHub, but the cells themselves
+  are the copy uploaded to Kaggle. A session was observed running `src/` three
+  commits ahead of its own cells — using a superseded DDP probe and a pre-flight
+  four times longer than intended, silently. Every notebook now carries a build
+  fingerprint checked against the repo, so a stale copy fails immediately with
+  instructions. **When told the notebook is stale: File → Import Notebook and
+  re-upload it from `notebooks/`.**
+
 * **Never `pip install detectron2`.** The repo vendors a *modified* detectron2
   and pycocotools (multi-label partial annotations, a 3-tier category schema).
   A pip install silently shadows them and every number changes.

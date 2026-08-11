@@ -84,6 +84,43 @@ DEVIATIONS_MD = os.path.join(PAPER_ASSETS, "deviations.md")
 #: seed for every primary run so variants differ only in the two switches.
 BASE_SEED = 40244023
 
+#: Build fingerprints of the generated notebooks, written by
+#: ``tools/build_notebooks.py``.
+NOTEBOOK_BUILDS = os.path.join(SRC_DIR, "notebook_build.json")
+
+
+def assert_notebook_current(notebook: str, build: str) -> Dict[str, str]:
+    """
+    Fail if the notebook running these cells is older than the cloned repo.
+
+    This exists because of a real, silent divergence: the parameter cell
+    ``git pull``s the repo, so ``src/`` and ``configs_repro/`` are always fresh
+    — but the **notebook cells themselves are whatever was uploaded to Kaggle**
+    and never update. A session was observed running ``src/`` at one commit
+    while its cells were three commits behind, quietly using a superseded DDP
+    probe and a pre-flight four times longer than intended.
+
+    ``build`` is a fingerprint baked into the notebook at generation time; the
+    matching value ships in the repo, so a mismatch means "re-import this
+    notebook".
+    """
+    if not os.path.exists(NOTEBOOK_BUILDS):
+        return {"status": "unknown", "reason": "no notebook_build.json in this checkout"}
+    with open(NOTEBOOK_BUILDS) as handle:
+        expected = json.load(handle).get(notebook)
+    if expected is None:
+        return {"status": "unknown", "reason": "no fingerprint recorded for " + notebook}
+    if expected != build:
+        raise RuntimeError(
+            "STALE NOTEBOOK: the cells you are running were generated as {} but the "
+            "repo now ships {} for {}.\n"
+            "`git pull` refreshes src/ and configs_repro/, but NOT the notebook cells "
+            "-- those are the copy uploaded to Kaggle.\n"
+            "Fix: File -> Import Notebook, re-upload notebooks/{}.ipynb from the repo "
+            "(or copy its cells in), then re-run.".format(build, expected, notebook, notebook)
+        )
+    return {"status": "current", "build": build}
+
 
 # --------------------------------------------------------------------------
 # Run modes
