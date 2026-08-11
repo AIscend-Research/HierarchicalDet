@@ -63,7 +63,20 @@ def build_hook_classes():
     from detectron2.utils import comm
 
     class TimeBudgetHook(HookBase):
-        """Stop training once ``budget_seconds`` of wall clock has elapsed."""
+        """
+        Stop training once ``budget_seconds`` of wall clock has elapsed.
+
+        The stop decision is made **collectively**. Each rank reaches this hook
+        at a slightly different moment, so if every rank judged the clock alone,
+        one could raise after step N while another entered step N+1 and blocked
+        forever in DDP's gradient all-reduce waiting for a peer that had already
+        left -- a hang, then an NCCL timeout, minutes later and far from the
+        cause. Calibration always terminates through this hook, so on 2 GPUs
+        that race fired on every single run.
+
+        One tiny all_gather per iteration is nothing against a ~9 s step, and it
+        guarantees all ranks stop at the same iteration.
+        """
 
         def __init__(self, budget_seconds: float):
             self.budget_seconds = float(budget_seconds)
@@ -76,7 +89,10 @@ def build_hook_classes():
             if self.budget_seconds <= 0 or self.started is None:
                 return
             elapsed = time.time() - self.started
-            if elapsed >= self.budget_seconds:
+            stop = elapsed >= self.budget_seconds
+            if comm.get_world_size() > 1:
+                stop = bool(max(comm.all_gather(int(stop))))
+            if stop:
                 raise TimeBudgetExceeded(
                     "wall-clock budget of {:.0f}s reached at iteration {}"
                     .format(self.budget_seconds, self.trainer.iter)
