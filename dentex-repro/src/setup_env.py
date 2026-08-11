@@ -159,12 +159,18 @@ ALL_VARIANTS = ("full", "wo_manipulation", "wo_transfer", "wo_manip_transfer")
 
 RUN_MODES: Dict[str, RunConfig] = {
     # Prove the whole chain runs. Every notebook, every experiment class, tiny.
+    #
+    # 50 iterations, not 200: measured throughput on Kaggle T4 x2 is 9.13
+    # s/iter, so 200 iterations is 30 MINUTES per training run and smoke has
+    # seven of them -- 3.6 h to prove plumbing. 50 keeps every code path
+    # (checkpointing, trajectory snapshots at 1/3 and 2/3, evaluation) while
+    # costing ~8 min per run.
     "smoke": RunConfig(
         mode="smoke",
-        quadrant=StageBudget(hours=None, max_iter=200),
-        enumeration=StageBudget(hours=None, max_iter=200),
-        diagnosis=StageBudget(hours=None, max_iter=200),
-        base_diffusiondet=StageBudget(hours=None, max_iter=200),
+        quadrant=StageBudget(hours=None, max_iter=50),
+        enumeration=StageBudget(hours=None, max_iter=50),
+        diagnosis=StageBudget(hours=None, max_iter=50),
+        base_diffusiondet=StageBudget(hours=None, max_iter=50),
         variants=ALL_VARIANTS,
         base_tiers=(2,),
         eval_seeds=(0,),
@@ -176,7 +182,7 @@ RUN_MODES: Dict[str, RunConfig] = {
         fault_drops=(0.0, 0.5),
         trajectory_fractions=(1 / 3, 2 / 3),
         ims_per_batch=1,
-        est_gpu_hours=0.6,
+        est_gpu_hours=1.2,
     ),
     # Default. Hour-capped: the cap holds by construction on any hardware.
     "micro": RunConfig(

@@ -35,6 +35,19 @@ SWIN_B_FILENAME = "swin_base_patch4_window7_224_22k.pth"
 #: Checkpoint cadence asked for by the runbook (survives a session kill).
 CHECKPOINT_PERIOD = 2500
 
+
+def checkpoint_period(max_iter: int) -> int:
+    """
+    Checkpoint often enough that a session kill cannot cost a whole stage.
+
+    A flat 2,500 was fine against the paper's 30k–40k schedules, but measured
+    throughput on Kaggle T4 x2 is 9.13 s/iter, so an hour-capped stage is only
+    ~600 iterations — the periodic checkpointer would never fire once, and a
+    session killed at 95% of a stage would restart it from zero. Cap the period
+    at a quarter of the run so there are always ~4 resume points.
+    """
+    return max(25, min(CHECKPOINT_PERIOD, int(max_iter) // 4))
+
 #: Throughput calibration is bounded by **wall time, not iteration count**.
 #:
 #: A fixed 500-iteration probe was measured at 9.13 s/iter on Kaggle's T4 x2
@@ -266,7 +279,7 @@ def base_overrides(cfg_run, output_dir: str, max_iter: int, weights: str,
         "MODEL.WEIGHTS", weights,
         "SOLVER.MAX_ITER", str(int(max_iter)),
         "SOLVER.IMS_PER_BATCH", str(cfg_run.ims_per_batch * max(1, num_gpus)),
-        "SOLVER.CHECKPOINT_PERIOD", str(CHECKPOINT_PERIOD),
+        "SOLVER.CHECKPOINT_PERIOD", str(checkpoint_period(max_iter)),
         "SOLVER.AMP.ENABLED", "True" if amp else "False",
         "MODEL_EMA.ENABLED", "False",
         "TEST.EVAL_PERIOD", "0",
