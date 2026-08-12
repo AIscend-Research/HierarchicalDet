@@ -201,6 +201,59 @@ def prune_checkpoints(name: str, keep: Sequence[str] = (),
 # --------------------------------------------------------------------------
 # Cross-session resume
 # --------------------------------------------------------------------------
+def checkpoint_is_readable(path: str) -> bool:
+    """
+    Cheap integrity check for a ``.pth`` checkpoint.
+
+    A torch checkpoint is a zip archive, so a write cut short by a full disk or
+    a killed session leaves a file whose central directory (written last) is
+    missing. ``torch.load`` then dies with "PytorchStreamReader ... failed
+    finding central directory" -- but only after the caller has already spent
+    the time getting there. ``zipfile.is_zipfile`` reads the end-of-archive
+    record, so it rejects a truncated file in milliseconds without loading
+    2 GB of tensors.
+    """
+    import zipfile
+
+    try:
+        return os.path.getsize(path) > 1024 and zipfile.is_zipfile(path)
+    except OSError:
+        return False
+
+
+def purge_corrupt_checkpoints(name: str) -> List[str]:
+    """
+    Delete unreadable checkpoints from a run directory and repair
+    ``last_checkpoint`` if it names one of them.
+
+    detectron2 resumes from whatever ``last_checkpoint`` points at, so a single
+    truncated file left by an interrupted session poisons every later attempt
+    until it is removed.
+    """
+    directory = run_dir(name)
+    removed = []
+    for path in sorted(glob.glob(os.path.join(directory, "*.pth"))):
+        if not checkpoint_is_readable(path):
+            os.remove(path)
+            removed.append(os.path.basename(path))
+
+    marker = os.path.join(directory, "last_checkpoint")
+    if os.path.exists(marker):
+        with open(marker) as handle:
+            target = handle.read().strip()
+        if not os.path.exists(os.path.join(directory, os.path.basename(target))):
+            survivors = sorted(glob.glob(os.path.join(directory, "model_[0-9]*.pth")),
+                               key=_iteration_of)
+            if survivors:
+                with open(marker, "w") as handle:
+                    handle.write(os.path.basename(survivors[-1]))
+            else:
+                os.remove(marker)
+    if removed:
+        print("[{}] removed truncated checkpoint(s): {}".format(name, removed))
+    return removed
+
+
 def _iteration_of(path: str) -> int:
     match = re.search(r"model_(\d+)\.pth$", os.path.basename(path))
     return int(match.group(1)) if match else -1
@@ -234,11 +287,31 @@ def seed_from_attached_datasets(name: str,
             os.path.join(root, "**", "runs", mode, name, "model_*.pth"), recursive=True))
         candidates.extend(glob.glob(
             os.path.join(root, "**", mode, name, "model_*.pth"), recursive=True))
+    # The two globs above overlap, so the same file can appear twice.
+    candidates = sorted(set(os.path.abspath(c) for c in candidates))
     if not candidates:
         return None
 
-    finals = [c for c in candidates if c.endswith("model_final.pth")]
-    best = finals[0] if finals else max(candidates, key=_iteration_of)
+    # Pick the newest checkpoint that is actually READABLE. A crash mid-save
+    # (a full disk, a killed session) leaves a truncated .pth behind, and the
+    # newest file is exactly the one most likely to be the casualty: a run that
+    # died writing model_0000899.pth left it half-written, and resuming from it
+    # failed with "PytorchStreamReader ... failed finding central directory"
+    # after the session had already spent an hour getting there.
+    finals = [c for c in candidates
+              if c.endswith("model_final.pth") and checkpoint_is_readable(c)]
+    numbered = sorted((c for c in candidates if not c.endswith("model_final.pth")),
+                      key=_iteration_of, reverse=True)
+    rejected = [os.path.basename(c) for c in candidates if not checkpoint_is_readable(c)]
+    if rejected:
+        print("[{}] ignoring truncated checkpoint(s) from an interrupted "
+              "session: {}".format(name, rejected))
+    best = finals[0] if finals else next(
+        (c for c in numbered if checkpoint_is_readable(c)), None)
+    if best is None:
+        print("[{}] no readable checkpoint in the attached datasets; "
+              "training from scratch".format(name))
+        return None
 
     local = os.path.join(destination, os.path.basename(best))
     if not os.path.exists(local):
@@ -583,6 +656,10 @@ def train_stage(name: str, config_file: str, cfg_run, train_split: str,
     else about the run changes between variants.
     """
     directory = run_dir(name)
+    # Clear any truncated checkpoint left in the local run directory by an
+    # interrupted session BEFORE restoring, so a poisoned `last_checkpoint`
+    # cannot survive into this run.
+    purge_corrupt_checkpoints(name)
     seed_from_attached_datasets(name)
 
     if is_complete(name):
