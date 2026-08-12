@@ -246,6 +246,15 @@ def seed_from_attached_datasets(name: str,
     # detectron2 resumes from whatever `last_checkpoint` names.
     with open(os.path.join(destination, "last_checkpoint"), "w") as handle:
         handle.write(os.path.basename(best))
+    # Attached datasets are read-only under /kaggle/input and cost nothing
+    # against the ~20 GB working quota -- but this copy lands in /kaggle/working
+    # and does. A finished stage restored from an older session still carries
+    # its optimizer state (~2/3 of ~2.0 GB), which nothing downstream needs, so
+    # slim it on arrival rather than paying for it all session.
+    if best.endswith("model_final.pth"):
+        print("[{}] restored from attached dataset; {}".format(
+            name, slim_checkpoint(local)))
+
     sibling = os.path.join(os.path.dirname(best), "run_record.json")
     if os.path.exists(sibling):
         if best.endswith("model_final.pth"):
