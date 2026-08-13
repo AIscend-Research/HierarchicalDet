@@ -205,6 +205,38 @@ def prune_checkpoints(name: str, keep: Sequence[str] = (),
 # --------------------------------------------------------------------------
 # Cross-session resume
 # --------------------------------------------------------------------------
+def locate_weights(run_name: str, filename: str = "model_final.pth",
+                   search_roots: Sequence[str] = ()) -> Optional[str]:
+    """
+    Find a run's weights, whether they were produced here or arrived attached.
+
+    Notebook 02 records absolute paths under ``/kaggle/working/runs/...``. A
+    later session starts with that directory empty and the checkpoints mounted
+    read-only under ``/kaggle/input/``, so those recorded paths do not resolve
+    and every model silently drops out of the evaluation.
+
+    Returns the **attached path directly** rather than copying. Evaluation only
+    reads weights, and the checkpoint set is several GB -- copying it in would
+    reintroduce the disk pressure that has already cost three sessions.
+    """
+    local = os.path.join(run_dir(run_name), filename)
+    if os.path.exists(local) and checkpoint_is_readable(local):
+        return local
+
+    roots = list(search_roots) or (
+        sorted(glob.glob(os.path.join(setup_env.KAGGLE_INPUT, "*")))
+        if setup_env.ON_KAGGLE else []
+    )
+    mode = setup_env.ACTIVE_MODE
+    for root in roots:
+        for pattern in (os.path.join(root, "**", "runs", mode, run_name, filename),
+                        os.path.join(root, "**", mode, run_name, filename)):
+            for candidate in sorted(glob.glob(pattern, recursive=True)):
+                if checkpoint_is_readable(candidate):
+                    return candidate
+    return None
+
+
 def checkpoint_is_readable(path: str) -> bool:
     """
     Cheap integrity check for a ``.pth`` checkpoint.

@@ -786,32 +786,42 @@ CFG = {name: os.path.join(setup_env.CONFIGS_REPRO, "diffdet.dentex.{}.yaml".form
        for name in ("quadrant", "enumeration", "diagnosis", "base_diffusiondet")}
 training = setup_env.read_notebook_summary("02_train_all") or {}
 weights = training.get("weights") or {}
-FULL_WEIGHTS = (weights.get("variants") or {}).get("full")
+FULL_WEIGHTS = train_utils.locate_weights("diagnosis_full")
 
 TIER_CLASSES = {0: 4, 1: 8, 2: 4}
 models = {}
-for label, key, config in (("Stage_quadrant", "quadrant", CFG["quadrant"]),
-                           ("Stage_enumeration", "enumeration", CFG["enumeration"])):
-    path = weights.get(key)
-    if path and os.path.exists(path):
+# Notebook 02 recorded absolute paths under /kaggle/working/runs/... . This
+# session starts with that directory EMPTY and the checkpoints mounted
+# read-only under /kaggle/input/, so resolve by run name instead of trusting
+# the recorded path -- otherwise every model silently drops out and the
+# evaluation runs on nothing.
+for label, run_name, config in (("Stage_quadrant", "quadrant_stage", CFG["quadrant"]),
+                                ("Stage_enumeration", "enumeration_stage", CFG["enumeration"])):
+    path = train_utils.locate_weights(run_name)
+    if path:
         models[label] = {"weights": path, "config": config, "tier": 2,
-                         "overrides": [], "json_override": None}
-for variant, path in (weights.get("variants") or {}).items():
-    if os.path.exists(path):
+                         "overrides": [], "json_override": None, "run_name": run_name}
+for variant in (weights.get("variants") or setup_env.VARIANT_SWITCHES):
+    run_name = "diagnosis_{}".format(variant)
+    path = train_utils.locate_weights(run_name)
+    if path:
         models[setup_env.VARIANT_LABELS[variant]] = {
             "weights": path, "config": CFG["diagnosis"], "tier": 2,
-            "overrides": [], "json_override": None}
-for tier_str, path in (weights.get("base") or {}).items():
-    if os.path.exists(path):
-        tier = int(tier_str)
+            "overrides": [], "json_override": None, "run_name": run_name}
+for tier_str in (weights.get("base") or {}):
+    tier = int(tier_str)
+    run_name = "base_diffusiondet_tier{}".format(tier)
+    path = train_utils.locate_weights(run_name)
+    if path:
         models["DiffusionDet_base_tier{}".format(tier)] = {
             "weights": path, "config": CFG["base_diffusiondet"], "tier": 0,
             "overrides": ["MODEL.DiffusionDet.NUM_CLASSES",
                           "[{}, 8, 4]".format(TIER_CLASSES[tier])],
             "json_override": data_convert.flat_json_path(tier, "test"),
-            "flat_tier": tier}
+            "flat_tier": tier, "run_name": run_name}
 for label, spec in models.items():
-    print("{:26s} {}".format(label, spec["weights"]))
+    where = "attached" if setup_env.KAGGLE_INPUT in spec["weights"] else "local"
+    print("{:26s} [{}] {}".format(label, where, spec["weights"]))
 if HAS_GPU:
     assert models, "no trained checkpoints found — run notebook 02, or attach its dataset"
 '''),
@@ -870,9 +880,10 @@ if HAS_GPU:
         points = []
         for iteration, name in sorted((record.get("trajectory") or {}).items(),
                                       key=lambda kv: int(kv[0])):
-            checkpoint = os.path.join(train_utils.run_dir(record["name"]), name + ".pth")
-            if not os.path.exists(checkpoint):
-                print("missing trajectory checkpoint (skipped):", checkpoint)
+            checkpoint = train_utils.locate_weights(record["name"], name + ".pth")
+            if not checkpoint:
+                print("missing trajectory checkpoint (skipped): {}/{}".format(
+                    record["name"], name))
                 continue
             payload = eval_utils.evaluate_checkpoint(
                 checkpoint, CFG["diagnosis"], split="diagnosis_test", tier=2,
