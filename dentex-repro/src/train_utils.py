@@ -35,6 +35,10 @@ SWIN_B_FILENAME = "swin_base_patch4_window7_224_22k.pth"
 #: Checkpoint cadence asked for by the runbook (survives a session kill).
 CHECKPOINT_PERIOD = 2500
 
+#: Refuse to keep training below this much free space. A checkpoint is
+#: ~2.0 GB, so this leaves room to finish the one in flight.
+DISK_FLOOR_GB = 3.0
+
 
 def checkpoint_period(max_iter: int) -> int:
     """
@@ -471,6 +475,9 @@ def launch_training(config_file: str, overrides: Sequence[str], env_extra: Dict[
     if rate_probe:
         command += ["--rate-probe", rate_probe,
                     "--rate-probe-warmup", str(CALIBRATION_WARMUP)]
+    # Stop cleanly before the volume fills; a crash mid-save leaves a truncated
+    # checkpoint that poisons the next resume.
+    command += ["--disk-floor-gb", str(DISK_FLOOR_GB)]
     command += ["--heartbeat", os.path.join(output_dir, "heartbeat.json")]
     command += list(overrides)
 

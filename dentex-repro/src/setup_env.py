@@ -918,6 +918,71 @@ def discover_converted_data(search_roots: Sequence[str] = ()) -> Optional[str]:
     return None
 
 
+def disk_report() -> Dict[str, object]:
+    """
+    Where the disk actually went.
+
+    Three sessions were lost to ``No space left on device`` while a
+    hand-maintained model of checkpoint sizes said there was room. The model was
+    wrong somewhere it could not see -- most likely because attached datasets
+    are not free, they occupy the same volume as ``/kaggle/working``. So stop
+    modelling and report: total/used/free on the volume, plus the size of every
+    attached dataset and of each run directory.
+    """
+    import glob
+    import shutil
+
+    def tree_bytes(path: str) -> int:
+        total = 0
+        for directory, _subdirs, names in os.walk(path):
+            for name in names:
+                try:
+                    total += os.path.getsize(os.path.join(directory, name))
+                except OSError:
+                    pass
+        return total
+
+    usage = shutil.disk_usage(RUNS_ROOT if os.path.isdir(RUNS_ROOT) else PROJECT_ROOT)
+    inputs = {}
+    if ON_KAGGLE:
+        for root in sorted(glob.glob(os.path.join(KAGGLE_INPUT, "*"))):
+            inputs[os.path.basename(root)] = round(tree_bytes(root) / (1024 ** 3), 2)
+    runs = {}
+    if os.path.isdir(RUNS_ROOT):
+        for mode_dir in sorted(glob.glob(os.path.join(RUNS_ROOT, "*"))):
+            for run in sorted(glob.glob(os.path.join(mode_dir, "*"))):
+                if os.path.isdir(run):
+                    key = os.path.join(os.path.basename(mode_dir), os.path.basename(run))
+                    runs[key] = round(tree_bytes(run) / (1024 ** 3), 2)
+    return {
+        "volume_total_gb": round(usage.total / (1024 ** 3), 2),
+        "volume_used_gb": round(usage.used / (1024 ** 3), 2),
+        "volume_free_gb": round(usage.free / (1024 ** 3), 2),
+        "attached_inputs_gb": inputs,
+        "attached_inputs_total_gb": round(sum(inputs.values()), 2),
+        "runs_gb": runs,
+        "runs_total_gb": round(sum(runs.values()), 2),
+    }
+
+
+def print_disk_report(prefix: str = "") -> Dict[str, object]:
+    report = disk_report()
+    print("{}disk: {:.1f} GB free of {:.1f} GB total ({:.1f} used)".format(
+        prefix, report["volume_free_gb"], report["volume_total_gb"],
+        report["volume_used_gb"]))
+    if report["attached_inputs_gb"]:
+        print("{}  attached inputs ({:.1f} GB): {}".format(
+            prefix, report["attached_inputs_total_gb"],
+            ", ".join("{}={:.1f}".format(k, v)
+                      for k, v in report["attached_inputs_gb"].items())))
+    if report["runs_gb"]:
+        print("{}  runs ({:.1f} GB): {}".format(
+            prefix, report["runs_total_gb"],
+            ", ".join("{}={:.1f}".format(k, v)
+                      for k, v in sorted(report["runs_gb"].items()) if v > 0.01)))
+    return report
+
+
 def hydrate_from_attached_datasets(search_roots: Sequence[str] = ()) -> Dict[str, object]:
     """
     Copy accumulated results out of attached Kaggle Datasets into this session's
@@ -1025,5 +1090,6 @@ def bootstrap(mode: Optional[str] = None, require_gpu: bool = False,
         if hydrated["restored"]:
             print("restored {} result file(s) from attached datasets"
                   .format(len(hydrated["restored"])))
+        print_disk_report()
         print("=" * 72)
     return run

@@ -46,6 +46,10 @@ class TimeBudgetExceeded(Exception):
     """Raised inside the training loop when the wall-clock budget is spent."""
 
 
+class DiskExhausted(Exception):
+    """Raised inside the training loop when free disk drops below the floor."""
+
+
 def _hooks_module():
     from detectron2.engine import hooks
 
@@ -96,6 +100,43 @@ def build_hook_classes():
                 raise TimeBudgetExceeded(
                     "wall-clock budget of {:.0f}s reached at iteration {}"
                     .format(self.budget_seconds, self.trainer.iter)
+                )
+
+    class DiskGuardHook(HookBase):
+        """
+        Stop *before* the disk fills, rather than crashing while writing.
+
+        Running out of space mid-``torch.save`` is far worse than stopping: it
+        leaves a truncated checkpoint that later poisons the resume, which is
+        exactly the cascade that cost three sessions (full disk -> half-written
+        model_0000899.pth -> "failed finding central directory" on the next
+        run). Stopping cleanly leaves the last complete checkpoint as a valid
+        resume point.
+
+        Deliberately does NOT try to save on the way out: if free space is
+        below the floor there is no room for a ~2 GB checkpoint anyway.
+        """
+
+        def __init__(self, floor_gb: float, period: int = 10):
+            self.floor_gb = float(floor_gb)
+            self.period = max(1, int(period))
+
+        def after_step(self):
+            if (self.trainer.iter + 1) % self.period:
+                return
+            import shutil
+
+            free_gb = shutil.disk_usage(
+                self.trainer.checkpointer.save_dir).free / (1024 ** 3)
+            stop = free_gb < self.floor_gb
+            if comm.get_world_size() > 1:
+                stop = bool(max(comm.all_gather(int(stop))))
+            if stop:
+                raise DiskExhausted(
+                    "only {:.1f} GB free (floor {:.1f} GB) at iteration {}; stopping "
+                    "cleanly so the last checkpoint stays valid. Free space and "
+                    "re-run -- this stage will resume."
+                    .format(free_gb, self.floor_gb, self.trainer.iter)
                 )
 
     class TrajectoryHook(HookBase):
@@ -205,7 +246,8 @@ def build_hook_classes():
             with open(self.path, "w") as handle:
                 json.dump(payload, handle, indent=2)
 
-    return TimeBudgetHook, TrajectoryHook, HeartbeatHook, RateProbeHook
+    return (TimeBudgetHook, TrajectoryHook, HeartbeatHook, RateProbeHook,
+            DiskGuardHook)
 
 
 def build_config(args):
@@ -237,7 +279,8 @@ def main(args):
 
     from train_net_patched import Trainer
 
-    TimeBudgetHook, TrajectoryHook, HeartbeatHook, RateProbeHook = build_hook_classes()
+    (TimeBudgetHook, TrajectoryHook, HeartbeatHook, RateProbeHook,
+     DiskGuardHook) = build_hook_classes()
 
     trajectory = json.loads(args.trajectory or "{}")
     budget_seconds = float(args.budget_seconds or 0.0)
@@ -266,6 +309,8 @@ def main(args):
                 extra.append(TimeBudgetHook(budget_seconds))
             if args.rate_probe:
                 extra.append(RateProbeHook(args.rate_probe, args.rate_probe_warmup))
+            if args.disk_floor_gb > 0:
+                extra.append(DiskGuardHook(args.disk_floor_gb))
             return hooks_list + extra
 
     trainer = ReproTrainer(cfg)
@@ -273,6 +318,7 @@ def main(args):
 
     started = time.time()
     stopped_early = False
+    out_of_disk = False
     try:
         trainer.train()
     except TimeBudgetExceeded as stop:
@@ -280,6 +326,12 @@ def main(args):
         print("[train_entry] {}".format(stop), flush=True)
         if comm.is_main_process():
             trainer.checkpointer.save("model_final")
+    except DiskExhausted as stop:
+        # No model_final here on purpose: there is no room to write one, and a
+        # partial file would be worse than none. The last periodic checkpoint
+        # is the resume point.
+        out_of_disk = True
+        print("[train_entry] {}".format(stop), flush=True)
     wall_seconds = time.time() - started
 
     if comm.is_main_process():
@@ -298,6 +350,7 @@ def main(args):
             "wall_seconds": round(wall_seconds, 1),
             "budget_seconds": budget_seconds,
             "stopped_on_time_budget": stopped_early,
+            "stopped_out_of_disk": out_of_disk,
             "weights_init": cfg.MODEL.WEIGHTS,
             "noisy_box_train": os.environ.get("NOISY_BOX_TRAIN"),
             "noisy_box_val": os.environ.get("NOISY_BOX_VAL"),
@@ -340,6 +393,8 @@ def get_parser():
                         help="write measured iters/second here (calibration runs)")
     parser.add_argument("--rate-probe-warmup", type=int, default=50,
                         help="iterations to discard before measuring throughput")
+    parser.add_argument("--disk-floor-gb", type=float, default=3.0,
+                        help="stop cleanly when free disk drops below this")
     return parser
 
 
