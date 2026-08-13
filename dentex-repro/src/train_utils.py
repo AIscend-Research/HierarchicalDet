@@ -228,13 +228,27 @@ def locate_weights(run_name: str, filename: str = "model_final.pth",
         if setup_env.ON_KAGGLE else []
     )
     mode = setup_env.ACTIVE_MODE
+    candidates = []
     for root in roots:
         for pattern in (os.path.join(root, "**", "runs", mode, run_name, filename),
                         os.path.join(root, "**", mode, run_name, filename)):
-            for candidate in sorted(glob.glob(pattern, recursive=True)):
-                if checkpoint_is_readable(candidate):
-                    return candidate
-    return None
+            candidates.extend(glob.glob(pattern, recursive=True))
+    candidates = [c for c in sorted(set(candidates)) if checkpoint_is_readable(c)]
+    if not candidates:
+        return None
+
+    # Several checkpoint datasets are usually attached at once -- an early one
+    # from a session that crashed, a later one that finished. Returning the
+    # first match would resolve them ALPHABETICALLY, so "dentex-repro-ckpts"
+    # would silently beat "dentex-repro-ckpts-v2" and the study would be
+    # evaluated on superseded weights. Take the most recently written, and say
+    # so when the choice was not unique.
+    best = max(candidates, key=os.path.getmtime)
+    if len(candidates) > 1:
+        print("[{}] {} attached copies of {}; using the newest:\n    {}\n  (ignored: {})"
+              .format(run_name, len(candidates), filename, best,
+                      ", ".join(c for c in candidates if c != best)))
+    return best
 
 
 def checkpoint_is_readable(path: str) -> bool:
