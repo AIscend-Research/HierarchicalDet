@@ -150,17 +150,25 @@ def slim_checkpoint(path: str) -> Dict[str, object]:
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     if not isinstance(checkpoint, dict) or "model" not in checkpoint:
         return {"path": path, "skipped": "not a checkpoint dict"}
-    if "optimizer" not in checkpoint and "scheduler" not in checkpoint:
+
+    # WHITELIST what to keep, never blacklist what to drop. This function
+    # originally dropped top-level "optimizer"/"scheduler" and, finding neither,
+    # declared every real checkpoint "already slim" -- so slimming never once
+    # happened, which is why the disk kept filling. The optimizer state is not
+    # top level here: train_net_patched registers the *trainer* as the only
+    # checkpointable, so a checkpoint is {model, iteration, trainer} and the
+    # 1.29 GB of AdamW moments sit nested under trainer/_trainer.
+    keep = {"model", "iteration", "matching_heuristics"}
+    dropped = sorted(set(checkpoint) - keep)
+    if not dropped:
         return {"path": path, "skipped": "already slim", "bytes": before}
-    slim = {"model": checkpoint["model"]}
-    for key in ("iteration", "matching_heuristics"):
-        if key in checkpoint:
-            slim[key] = checkpoint[key]
+    slim = {key: checkpoint[key] for key in keep if key in checkpoint}
     temporary = path + ".slim"
     torch.save(slim, temporary)
     os.replace(temporary, path)
     after = os.path.getsize(path)
     return {"path": path, "bytes_before": before, "bytes_after": after,
+            "dropped": dropped,
             "freed_gb": round((before - after) / (1024 ** 3), 2)}
 
 
@@ -205,6 +213,61 @@ def prune_checkpoints(name: str, keep: Sequence[str] = (),
 # --------------------------------------------------------------------------
 # Cross-session resume
 # --------------------------------------------------------------------------
+def discover_runs(search_roots: Sequence[str] = ()) -> List[Dict[str, object]]:
+    """
+    Rebuild the list of training runs from ``run_record.json`` on disk.
+
+    Notebook 03 normally reads notebook 02's summary, but that summary lives in
+    ``paper_assets/`` and is easy to lose: a checkpoint dataset built from
+    ``runs/`` alone contains every weight and every run record, yet no summary —
+    and the trajectory sweep would silently do nothing. The run records hold
+    everything needed, so read them directly and treat the summary as an
+    optimisation rather than a requirement.
+
+    ``kind`` and ``variant`` are inferred from the run name, because they are
+    set by the notebook after ``train_stage`` returns and so never reach the
+    on-disk record.
+    """
+    roots = list(search_roots) or (
+        sorted(glob.glob(os.path.join(setup_env.KAGGLE_INPUT, "*")))
+        if setup_env.ON_KAGGLE else []
+    )
+    mode = setup_env.ACTIVE_MODE
+    patterns = [os.path.join(setup_env.RUNS_DIR, "*", "run_record.json")]
+    for root in roots:
+        patterns.append(os.path.join(root, "**", "runs", mode, "*", "run_record.json"))
+        patterns.append(os.path.join(root, "**", mode, "*", "run_record.json"))
+
+    by_name: Dict[str, Dict[str, object]] = {}
+    for pattern in patterns:
+        for path in sorted(glob.glob(pattern, recursive=True)):
+            try:
+                with open(path) as handle:
+                    record = json.load(handle)
+            except (OSError, ValueError):
+                continue
+            name = record.get("name") or os.path.basename(os.path.dirname(path))
+            record["name"] = name
+            if name.startswith("diagnosis_"):
+                record["kind"] = "diagnosis_variant"
+                record["variant"] = name[len("diagnosis_"):]
+                record["label"] = setup_env.VARIANT_LABELS.get(
+                    record["variant"], record["variant"])
+            elif name.startswith("base_diffusiondet_tier"):
+                record["kind"] = "base_diffusiondet"
+            else:
+                record["kind"] = "prerequisite"
+            # Later patterns are attached datasets; a locally-produced record
+            # wins, otherwise the newest file does.
+            existing = by_name.get(name)
+            if existing is None or os.path.getmtime(path) > existing.pop("_mtime", 0):
+                record["_mtime"] = os.path.getmtime(path)
+                by_name[name] = record
+    for record in by_name.values():
+        record.pop("_mtime", None)
+    return [by_name[name] for name in sorted(by_name)]
+
+
 def locate_weights(run_name: str, filename: str = "model_final.pth",
                    search_roots: Sequence[str] = ()) -> Optional[str]:
     """

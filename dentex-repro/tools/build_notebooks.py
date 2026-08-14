@@ -872,7 +872,14 @@ if HAS_GPU:
 # checkpoints is evidence the ablation conclusion is not an artifact of the
 # shortened schedule; unstable ordering is itself the finding.
 if HAS_GPU:
-    for record in training.get("records", []):
+    # Prefer notebook 02's summary, but fall back to the run records on disk:
+    # a checkpoint dataset built from runs/ alone has every weight and every
+    # record but no summary, and the sweep would otherwise silently do nothing.
+    records = [r for r in training.get("records", []) if r.get("kind")]
+    if not records:
+        records = train_utils.discover_runs()
+        print("summary absent; rebuilt {} run record(s) from disk".format(len(records)))
+    for record in records:
         if record.get("kind") != "diagnosis_variant":
             continue
         variant = record["variant"]
