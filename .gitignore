@@ -12,3 +12,7 @@ phase1_audit/.gitattributes
 phase1_audit/figures/
 .DS_Store
 dentex-repro/.pip-constraints.txt
+
+# Training outputs: multi-GB checkpoints, uploaded to Kaggle as a Dataset,
+# never to git.
+runs/

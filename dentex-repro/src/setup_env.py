@@ -1063,8 +1063,15 @@ def bootstrap(mode: Optional[str] = None, require_gpu: bool = False,
         print("detectron2 from  : {}".format(found["detectron2"]))
         print("pycocotools from : {}".format(found["pycocotools"]))
         print("runs dir         : {}".format(RUNS_DIR))
+        have_data = os.path.exists(os.path.join(DATA_DIR, "coco", "train_diagnosis.json"))
         print("data dir         : {}{}".format(
-            DATA_DIR, "  (attached dataset, read-only)" if attached_data else ""))
+            DATA_DIR,
+            "  (attached dataset, read-only)" if attached_data
+            else ("" if have_data else "  *** NO CONVERTED DATA HERE ***")))
+        if not have_data:
+            print("                   ^ nothing registered will resolve. Either run "
+                  "notebook 01, or Add Data -> the dataset notebook 01 published "
+                  "(the one containing coco/train_diagnosis.json).")
         print("training seed    : {}".format(BASE_SEED))
         print("eval seeds       : {}".format(list(run.eval_seeds)))
         print("variants         : {}".format(list(run.variants)))

@@ -60,15 +60,27 @@ def register(name: str, json_file: str, image_root: str):
     degraded image directory, a subset JSON), so an existing registration
     pointing elsewhere is replaced rather than silently reused.
     """
-    from detectron2.data import DatasetCatalog, MetadataCatalog
-    from detectron2.data.datasets import register_coco_instances
-
+    # Check the inputs BEFORE importing detectron2: a missing dataset is a
+    # setup mistake, and reporting it should not require a working torch stack.
     for path in (json_file, image_root):
         if not os.path.exists(path):
+            # Say which of the two situations this is. "Run notebook 01 first"
+            # is wrong and misleading when notebook 01 has already been run and
+            # the real problem is that its dataset was not attached here.
+            attached = (sorted(os.listdir(setup_env.KAGGLE_INPUT))
+                        if os.path.isdir(setup_env.KAGGLE_INPUT) else [])
             raise FileNotFoundError(
-                "cannot register {!r}: {} does not exist. Run notebook 01 first."
-                .format(name, path)
+                "cannot register {!r}: {} does not exist.\n"
+                "The converted dataset is not present in this session. Currently "
+                "attached: {}\n"
+                "Fix: Add Data -> the dataset notebook 01 published (it contains "
+                "coco/train_diagnosis.json). If notebook 01 has never run here, "
+                "run it first."
+                .format(name, path, attached or "nothing")
             )
+
+    from detectron2.data import DatasetCatalog, MetadataCatalog
+    from detectron2.data.datasets import register_coco_instances
 
     if name in DatasetCatalog.list():
         metadata = MetadataCatalog.get(name)
