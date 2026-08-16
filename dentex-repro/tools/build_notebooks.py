@@ -303,7 +303,7 @@ for name, (json_key, image_key, tier) in {
                 if annotation.get("category_id_{}".format(level + 1)) is not None)
             boxes.append((annotation["bbox"], label))
         panels.append({"image_path": os.path.join(paths[image_key], image["file_name"]),
-                       "title": "{} — {}".format(name, image["file_name"]),
+                       "title": "{}: {}".format(name, image["file_name"]),
                        "gt": boxes, "pred": []})
 
 figure = figures.overlay_grid(panels, columns=5, panel_height=1.7,
@@ -1095,7 +1095,7 @@ if HAS_GPU and FULL_WEIGHTS:
             panels.append(panel(row["image_id"], "{}\\n{}".format(bucket, row["file_name"])))
     if panels:
         figure = figures.overlay_grid(panels, columns=4, panel_height=2.0,
-                                      title="Failure gallery — blue solid: ground truth, "
+                                      title="Failure gallery. Blue solid: ground truth, "
                                             "orange dashed: prediction")
         figures.save_figure(figure, "failure_gallery",
                             "Representative failures of the full model on the DENTEX "
@@ -1408,7 +1408,7 @@ if per_class:
         if absent:
             print("  {} tier: no test ground truth for {}".format(tier, absent))
         figure = figures.grouped_bars(classes, groups, "AP [0.5:0.95]",
-                                      "Per-class AP — {} tier (our extension)".format(tier),
+                                      "Per-class AP, {} tier (our extension)".format(tier),
                                       rotate=45 if tier == "diagnosis" else 0,
                                       absent=absent)
         figures.save_figure(figure, "per_class_ap_{}".format(tier),

@@ -56,9 +56,54 @@ def use_paper_style() -> None:
     })
 
 
+#: Characters banned from anything a figure renders or ships. Em and en dashes
+#: are the ones that keep reappearing; a few fonts drop them entirely, and they
+#: are trivially confusable with a minus sign on an axis.
+BANNED_GLYPHS = {"—": " - ", "–": "-", "−": "-"}
+
+
+def scrub(text: str) -> str:
+    """Replace banned glyphs in any string destined for a figure."""
+    for bad, good in BANNED_GLYPHS.items():
+        text = text.replace(bad, good)
+    return text
+
+
+def assert_no_banned_glyphs(fig) -> None:
+    """
+    Fail if any rendered text in the figure contains a banned glyph.
+
+    Checked on the figure itself rather than on the source strings, so titles,
+    axis labels, tick labels, legend entries and annotations are all covered no
+    matter where they were set.
+    """
+    offenders = []
+    for axis in fig.get_axes():
+        texts = [axis.title, axis.xaxis.label, axis.yaxis.label]
+        texts += list(axis.texts) + list(axis.get_xticklabels()) + list(axis.get_yticklabels())
+        legend = axis.get_legend()
+        if legend is not None:
+            texts += list(legend.get_texts())
+        for item in texts:
+            content = item.get_text() or ""
+            if any(bad in content for bad in BANNED_GLYPHS):
+                offenders.append(content)
+    for item in getattr(fig, "texts", []):
+        if any(bad in (item.get_text() or "") for bad in BANNED_GLYPHS):
+            offenders.append(item.get_text())
+    if offenders:
+        raise ValueError(
+            "figure text contains banned glyphs (em/en dash or unicode minus): {}. "
+            "Use figures.scrub() or plain ASCII.".format(offenders)
+        )
+
+
 def save_figure(fig, name: str, caption: str, notebook: str, run_mode: str,
                 asset_class: str, inputs: Sequence[str] = (),
                 note: str = "") -> Dict[str, str]:
+    assert_no_banned_glyphs(fig)
+    caption = scrub(caption)
+    note = scrub(note)
     os.makedirs(FIGURES_DIR, exist_ok=True)
     pdf_path = os.path.join(FIGURES_DIR, name + ".pdf")
     png_path = os.path.join(FIGURES_DIR, name + ".png")

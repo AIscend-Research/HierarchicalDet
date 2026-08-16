@@ -1,0 +1,32 @@
+{
+  "created_at": "2026-08-16T13:55:04-0700",
+  "assets": [
+    {
+      "path": "../../../../../../tmp/figcheck/out3/good.pdf",
+      "asset_class": "figure:per_class_ap",
+      "notebook": "03",
+      "run_mode": "micro",
+      "status": "produced",
+      "config_hash": null,
+      "inputs": [],
+      "note": "AP by class  -  our extension",
+      "timestamp": "2026-08-16T13:55:04-0700",
+      "sha256": "c6ff7a1fda56c6c88c91daa3a9a1ee934b8e93d13bce9637d0c71f9be8198f41",
+      "bytes": 10125
+    },
+    {
+      "path": "../../../../../../tmp/figcheck/out3/good.png",
+      "asset_class": "figure:per_class_ap",
+      "notebook": "03",
+      "run_mode": "micro",
+      "status": "produced",
+      "config_hash": null,
+      "inputs": [],
+      "note": "AP by class  -  our extension",
+      "timestamp": "2026-08-16T13:55:04-0700",
+      "sha256": "ad4226781cdb8e8496bbec5ac452452c0d524bc5f263b262ef497e43432cc88d",
+      "bytes": 68977
+    }
+  ],
+  "updated_at": "2026-08-16T13:55:04-0700"
+}
