@@ -843,11 +843,19 @@ if HAS_GPU:
         eval_utils.save_result(manifest.result_name("eval_main", model=label), payload)
         for tier, cells in payload["aggregate"].items():
             ap = cells.get("AP", {})
+            # Print the detection count alongside AP: AP=0 with thousands of
+            # detections means the model predicts but never matches ground
+            # truth, while AP=0 with zero detections is a different failure
+            # entirely, and the number is the only way to tell them apart.
+            detections = (payload["runs"][0]["tiers"].get(tier) or {}).get("num_predictions")
             if ap.get("mean") is not None:
-                print("  {:12s} AP {:.2f} ± {:.2f}   AR {}".format(
+                print("  {:12s} AP {:6.2f} ± {:.2f}   AR {:>6}   detections {}".format(
                     tier, ap["mean"], ap["std"],
                     "{:.3f}".format(cells["AR"]["mean"])
-                    if cells["AR"]["mean"] is not None else "n/a"))
+                    if cells["AR"]["mean"] is not None else "n/a", detections))
+            else:
+                print("  {:12s} AP n/a (no finite value)      detections {}".format(
+                    tier, detections))
 '''),
         ("code", '''\
 # ---- Runtime, zero-detection and degenerate-box accounting ----

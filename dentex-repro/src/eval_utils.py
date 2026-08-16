@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import math
 import os
 import statistics
 import time
@@ -313,7 +314,15 @@ def aggregate_seeds(runs: Sequence[Dict[str, object]]) -> Dict[str, object]:
         aggregate[tier_key] = {}
         for metric in ALL_METRICS:
             values = [run["tiers"][tier_key]["metrics"].get(metric) for run in runs]
-            values = [v for v in values if isinstance(v, (int, float))]
+            # NaN is a float, so an isinstance check alone let it through and
+            # statistics.stdev died on it ("inf or nan encountered in data").
+            # The evaluator legitimately returns NaN -- COCOeval reports -1 for
+            # a metric with no ground truth in that size bucket, which
+            # _derive_coco_results turns into NaN -- so this is a normal input,
+            # not a corrupt one, and it must be dropped rather than crash a
+            # 2.5-hour evaluation at the aggregation step.
+            values = [v for v in values
+                      if isinstance(v, (int, float)) and math.isfinite(v)]
             if not values:
                 aggregate[tier_key][metric] = {"mean": None, "std": None, "n": 0}
                 continue

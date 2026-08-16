@@ -15,6 +15,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 import os
 from typing import Dict, List, Optional, Sequence
 
@@ -89,6 +90,12 @@ def reference_lookup() -> Dict[str, Dict[str, Dict[str, float]]]:
 def _format_cell(value) -> str:
     if value is None:
         return NOT_RUN
+    # NaN is a real, meaningful outcome here, distinct from "not run": COCOeval
+    # returns -1 for a metric with no ground truth in that bucket (e.g. APs when
+    # the split has no small objects), which the evaluator turns into NaN.
+    # Printing a bare "nan" in a paper table would read as a bug.
+    if isinstance(value, float) and not math.isfinite(value):
+        return "n/a"
     if isinstance(value, float):
         return "{:.3f}".format(value) if abs(value) < 10 else "{:.2f}".format(value)
     return str(value)
