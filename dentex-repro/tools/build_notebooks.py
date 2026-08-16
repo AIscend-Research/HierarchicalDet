@@ -1330,27 +1330,25 @@ else:
 if degradation_results:
     baseline = ((degradation_results.get("clean") or {}).get("aggregate", {})
                 .get("diagnosis", {}).get("AP", {}) or {}).get("mean")
-    series = []
-    for kind in degradations.KINDS:
-        points = []
-        for payload in degradation_results.values():
-            condition = payload.get("condition") or {}
-            if condition.get("kind") != kind:
-                continue
-            cell = payload["aggregate"]["diagnosis"]["AP"]
-            points.append((float(condition["severity"]), cell["mean"], cell.get("std") or 0.0))
-        if points:
-            points.sort()
-            series.append({"label": kind, "x": [p[0] for p in points],
-                           "y": [p[1] for p in points], "yerr": [p[2] for p in points]})
-    figure = figures.sweep_figure(series, "severity (blur sigma / JPEG quality / scale)",
-                                  "diagnosis AP [0.5:0.95]",
-                                  "Robustness to image degradation",
-                                  width=figures.DOUBLE_COLUMN * 0.6)
+    # One panel per corruption type: their severities are different quantities
+    # in different units, and JPEG quality even runs the opposite direction.
+    by_kind = {}
+    for payload in degradation_results.values():
+        condition = payload.get("condition") or {}
+        if condition.get("kind") in (None, "none"):
+            continue
+        cell = payload["aggregate"]["diagnosis"]["AP"]
+        if cell.get("mean") is None:
+            continue
+        by_kind.setdefault(condition["kind"], []).append(
+            {"severity": float(condition["severity"]), "mean": cell["mean"],
+             "std": cell.get("std") or 0.0})
+    figure = figures.degradation_figure(by_kind, baseline, "diagnosis AP [0.5:0.95]")
     figures.save_figure(figure, "degradation_curves",
                         "Diagnosis-tier AP under Gaussian blur, JPEG recompression and "
-                        "downscaling. Severity axes are per-type and not comparable "
-                        "across lines; the clean baseline is AP={}.".format(baseline),
+                        "downscaling, one panel per corruption because the severities "
+                        "are different quantities in different units. Dotted line is "
+                        "the clean baseline (AP={}).".format(baseline),
                         NB, run.mode, "figure:degradation")
 else:
     figures.record_not_run("figure:degradation", NB, run.mode, "degradation grid not run")
@@ -1397,7 +1395,7 @@ if per_class:
                   for method in sorted({r["method"] for r in rows})}
         figure = figures.grouped_bars(classes, groups, "AP [0.5:0.95]",
                                       "Per-class AP — {} tier (our extension)".format(tier),
-                                      rotate=45 if tier == "diagnosis" else 90)
+                                      rotate=45 if tier == "diagnosis" else 0)
         figures.save_figure(figure, "per_class_ap_{}".format(tier),
                             "Per-class AP at the {} tier. OUR EXTENSION: the original "
                             "paper reports tier-level aggregates only.".format(tier),

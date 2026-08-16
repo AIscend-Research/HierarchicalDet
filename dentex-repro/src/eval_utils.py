@@ -168,10 +168,18 @@ def _unpack_tier_results(raw: Dict[str, object], tier: int,
         value = box.get("{}_{}".format(metric, suffix))
         metrics[metric] = float(value) if isinstance(value, (int, float)) else None
     metrics["AR"] = captured.get("AR")
-    per_class = {
-        key[len("AP-"):]: (float(value) if isinstance(value, (int, float)) else None)
-        for key, value in box.items() if key.startswith("AP-")
-    }
+    # The vendored evaluator names these "AP-" + class + tier
+    # (coco_3class_eval.py:432), producing labels like "1Enumeration". Strip the
+    # tier back off so per-class figures read "1".."8" rather than repeating the
+    # tier on every tick.
+    per_class = {}
+    for key, value in box.items():
+        if not key.startswith("AP-"):
+            continue
+        name = key[len("AP-"):]
+        if name.endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+        per_class[name] = float(value) if isinstance(value, (int, float)) else None
     return {
         "metrics": metrics,
         "per_class_AP": per_class,

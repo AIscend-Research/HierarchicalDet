@@ -173,8 +173,63 @@ def grouped_bars(categories: Sequence[str], groups: Dict[str, Sequence[float]],
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     if len(groups) > 1:
-        ax.legend(ncol=min(4, len(groups)))
+        # Below the axes, not inside them: with five methods the in-plot legend
+        # overlapped the title and the tallest bars, and entries collided with
+        # each other.
+        ax.legend(ncol=min(3, len(groups)), loc="upper center",
+                  bbox_to_anchor=(0.5, -0.28), borderaxespad=0.0)
+    fig.tight_layout()
     return fig
+
+
+def degradation_figure(by_kind: Dict[str, List[Dict[str, float]]],
+                       baseline: Optional[float], ylabel: str):
+    """
+    One panel per corruption type, each with its own severity axis.
+
+    Blur sigma, JPEG quality and downscale factor are different quantities in
+    different units and opposite directions (higher sigma is worse, higher JPEG
+    quality is *better*). Drawing them against one shared x put JPEG quality 50
+    and blur sigma 4 at the same tick and squeezed the downscale points into the
+    left margin -- a figure whose own caption had to warn that its axis meant
+    nothing. Separate panels with a shared y let the curves be compared on the
+    axis that is actually common: accuracy.
+    """
+    import matplotlib.pyplot as plt
+
+    use_paper_style()
+    kinds = [k for k in KIND_ORDER if by_kind.get(k)]
+    if not kinds:
+        kinds = sorted(by_kind)
+    fig, axes = plt.subplots(1, len(kinds), figsize=(DOUBLE_COLUMN, 2.3), sharey=True)
+    if len(kinds) == 1:
+        axes = [axes]
+    for index, (axis, kind) in enumerate(zip(axes, kinds)):
+        points = sorted(by_kind[kind], key=lambda p: p["severity"])
+        axis.errorbar([p["severity"] for p in points], [p["mean"] for p in points],
+                      yerr=[p.get("std") or 0.0 for p in points],
+                      color=PALETTE[index % len(PALETTE)],
+                      marker=MARKERS[index % len(MARKERS)], capsize=2, elinewidth=0.8)
+        if baseline is not None:
+            axis.axhline(baseline, color="#666666", linestyle=":", linewidth=1.0,
+                         label="clean" if index == 0 else None)
+        axis.set_title(KIND_TITLES.get(kind, kind))
+        axis.set_xlabel(KIND_XLABEL.get(kind, "severity"))
+        if index == 0:
+            axis.set_ylabel(ylabel)
+            if baseline is not None:
+                axis.legend(loc="best")
+    fig.tight_layout()
+    return fig
+
+
+#: Panel order and axis wording for the degradation figure.
+KIND_ORDER = ("blur", "jpeg", "downscale")
+KIND_TITLES = {"blur": "Gaussian blur", "jpeg": "JPEG recompression",
+               "downscale": "Downscaling"}
+KIND_XLABEL = {"blur": "sigma (higher = blurrier)",
+               "jpeg": "quality (lower = worse)",
+               "downscale": "scale factor (lower = worse)"}
 
 
 def trajectory_figure(trajectories: Dict[str, Dict[str, List]], tiers: Sequence[str]):
