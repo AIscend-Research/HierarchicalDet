@@ -102,7 +102,30 @@ class DiffusionDet(nn.Module):
         self.self_condition = False
         self.scale = cfg.MODEL.DiffusionDet.SNR_SCALE
         self.box_renewal = True
-        self.use_ensemble = True
+
+        # Cross-timestep ensembling is OFF by default in this reproduction,
+        # because the released implementation of it was never finished for the
+        # multi-label fork and cannot run at all.
+        #
+        # It only executes when SAMPLE_STEP > 1, which the shipped configs never
+        # use, so the breakage was invisible upstream. Concretely: `inference()`
+        # returns `box_pred_per_image, scores_per_image, labels_per_image` --
+        # names that exist only in single-label DiffusionDet. This fork renamed
+        # them per tier (`labels_per_image_1/2/3`), so that return raises
+        # UnboundLocalError. And even past that, `ddim_sample` aggregates with
+        # `torch.cat(ensemble_label, dim=0)` and then indexes the result as
+        # `labels_per_image[k]` and `[0]/[1]/[2]`, i.e. treats it as a per-tier
+        # list and a tensor in the same breath. Making it coherent would mean
+        # accumulating all three tiers' labels separately -- a rewrite of code
+        # the authors never executed, producing numbers with nothing to compare
+        # against.
+        #
+        # With this off, SAMPLE_STEP > 1 still runs the full N-step denoising
+        # loop and predicts from the final step; only the aggregation of
+        # detections ACROSS timesteps is skipped. That is the variable the
+        # step-count experiment is actually about. Set DIFFUSIONDET_ENSEMBLE=1
+        # to opt back in and get the explanatory error below.
+        self.use_ensemble = os.environ.get("DIFFUSIONDET_ENSEMBLE", "0") == "1"
 
         self.register_buffer('betas', betas)
         self.register_buffer('alphas_cumprod', alphas_cumprod)
@@ -1005,7 +1028,19 @@ class DiffusionDet(nn.Module):
                 
                
                 if self.use_ensemble and self.sampling_timesteps > 1:
-                    return box_pred_per_image, scores_per_image, labels_per_image
+                    # Unreachable by default (use_ensemble is off; see __init__).
+                    # As released this line raises UnboundLocalError, because
+                    # these are single-label DiffusionDet's variable names and
+                    # this fork renamed them per tier. Fail with the reason
+                    # instead of the symptom.
+                    raise NotImplementedError(
+                        "cross-timestep ensembling is not implemented for the "
+                        "multi-label fork: this return references single-label "
+                        "names (labels_per_image) that do not exist here, and "
+                        "ddim_sample's aggregation treats the result as both a "
+                        "tensor and a per-tier list. Unset DIFFUSIONDET_ENSEMBLE "
+                        "to run multi-step sampling without it."
+                    )
 
                 if self.use_nms:
                     if k==0:

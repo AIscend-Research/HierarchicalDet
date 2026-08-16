@@ -920,6 +920,21 @@ if HAS_GPU:
         ("code", '''\
 # ---- Robustness 1: diffusion sampling steps (accuracy AND measured latency) ----
 if HAS_GPU and FULL_WEIGHTS:
+    # Multi-step sampling runs the full N-step denoising loop and predicts from
+    # the final step. Cross-timestep ENSEMBLING is off: the released
+    # implementation of it was never finished for the multi-label fork and
+    # raises UnboundLocalError on the first call (see detector.py __init__).
+    if len([s for s in run.step_sweep if s > 1]):
+        setup_env.log_deviation(
+            "diffusion step sweep runs without cross-timestep ensembling",
+            "the released ensemble path is unrunnable in the multi-label fork: "
+            "inference() returns single-label variable names that do not exist "
+            "here, and ddim_sample then treats the aggregate as both a tensor "
+            "and a per-tier list. N-step denoising itself is unaffected",
+            "03_evaluate_and_build_assets",
+            impact="AP-vs-steps measures denoising depth alone, without the "
+                   "multi-timestep detection ensemble the upstream single-label "
+                   "model would apply")
     for step in run.step_sweep:
         payload = eval_utils.evaluate_multi_seed(
             FULL_WEIGHTS, CFG["diagnosis"], run.robustness_seeds,
