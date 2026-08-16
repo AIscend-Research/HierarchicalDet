@@ -1393,9 +1393,24 @@ if per_class:
                                  if r["method"] == method and r["class"] == klass), 0.0)
                            for klass in classes]
                   for method in sorted({r["method"] for r in rows})}
+        # A class with NO test ground truth is not a class the model failed on.
+        # The released DENTEX test split has no Deep Caries annotations at all
+        # (see the data audit), so it must be marked, not left as a blank gap a
+        # reader would misread as "never detected".
+        with open(paths["test_diagnosis"]) as handle:
+            truth_json = json.load(handle)
+        level = {"quadrant": 1, "enumeration": 2, "diagnosis": 3}[tier]
+        labelled = {a.get("category_id_{}".format(level))
+                    for a in truth_json["annotations"]}
+        names = {str(c["name"]) for c in truth_json["categories_{}".format(level)]
+                 if c["id"] in labelled}
+        absent = [c for c in classes if c not in names]
+        if absent:
+            print("  {} tier: no test ground truth for {}".format(tier, absent))
         figure = figures.grouped_bars(classes, groups, "AP [0.5:0.95]",
                                       "Per-class AP — {} tier (our extension)".format(tier),
-                                      rotate=45 if tier == "diagnosis" else 0)
+                                      rotate=45 if tier == "diagnosis" else 0,
+                                      absent=absent)
         figures.save_figure(figure, "per_class_ap_{}".format(tier),
                             "Per-class AP at the {} tier. OUR EXTENSION: the original "
                             "paper reports tier-level aggregates only.".format(tier),

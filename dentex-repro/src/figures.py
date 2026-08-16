@@ -117,7 +117,11 @@ def sweep_figure(series: Sequence[Dict[str, object]], xlabel: str, ylabel: str,
     fig, ax = plt.subplots(figsize=(width, width * 0.72))
     line_series(ax, series, xlabel, ylabel, logx=logx)
     ax.set_title(title)
-    ax.legend()
+    # Outside the axes: with error bars these curves fill the panel, and an
+    # in-plot legend sat on top of the data in every rendered figure.
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.32),
+              ncol=min(3, len(series)), borderaxespad=0.0)
+    fig.tight_layout()
     return fig
 
 
@@ -143,9 +147,12 @@ def ap_vs_steps_figure(series: Sequence[Dict[str, object]],
         twin.grid(False)
         handles, labels = ax.get_legend_handles_labels()
         twin_handles, twin_labels = twin.get_legend_handles_labels()
-        ax.legend(handles + twin_handles, labels + twin_labels, loc="best")
+        ax.legend(handles + twin_handles, labels + twin_labels,
+                  loc="upper center", bbox_to_anchor=(0.5, -0.30),
+                  ncol=2, borderaxespad=0.0)
     else:
-        ax.legend()
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.30),
+                  ncol=2, borderaxespad=0.0)
     ax.set_xticks(sorted({x for entry in series for x in entry["x"]}))
     ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
     return fig
@@ -153,8 +160,18 @@ def ap_vs_steps_figure(series: Sequence[Dict[str, object]],
 
 def grouped_bars(categories: Sequence[str], groups: Dict[str, Sequence[float]],
                  ylabel: str, title: str, width: float = DOUBLE_COLUMN,
-                 rotate: int = 90):
-    """Grouped bar chart (per-class AP, error clusters)."""
+                 rotate: int = 90, absent: Sequence[str] = (),
+                 absent_note: str = "no test\nground truth"):
+    """
+    Grouped bar chart (per-class AP, error clusters).
+
+    ``absent`` names categories that have **no ground truth at all**, which is
+    not the same as scoring zero. The released DENTEX test split contains no
+    Deep Caries annotations, so that class rendered as an unexplained empty gap
+    between populated bars -- a reader would read it as "the model never detects
+    deep caries" when the truth is that the class cannot be scored. Those
+    categories are shaded and labelled instead.
+    """
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -168,10 +185,23 @@ def grouped_bars(categories: Sequence[str], groups: Dict[str, Sequence[float]],
         ax.bar(positions + index * bar_width - 0.4 + bar_width / 2, values,
                width=bar_width, label=label, color=PALETTE[index % len(PALETTE)],
                hatch=hatches[index % len(hatches)], edgecolor="white", linewidth=0.4)
+    absent = set(absent)
+    for index, category in enumerate(categories):
+        if category in absent:
+            ax.axvspan(index - 0.45, index + 0.45, color="#d9d9d9", alpha=0.55,
+                       zorder=0, linewidth=0)
+            ax.text(index, ax.get_ylim()[1] * 0.5, absent_note, ha="center",
+                    va="center", fontsize=6, color="#444444", zorder=3)
+
     ax.set_xticks(positions)
-    ax.set_xticklabels(categories, rotation=rotate, ha="center" if rotate == 90 else "right")
+    ax.set_xticklabels(categories, rotation=rotate,
+                       ha="center" if rotate in (0, 90) else "right")
     ax.set_ylabel(ylabel)
     ax.set_title(title)
+    if not any(any(v for v in values) for values in groups.values()):
+        # An all-zero chart renders as an empty box with no explanation.
+        ax.text(0.5, 0.5, "all values are zero", transform=ax.transAxes,
+                ha="center", va="center", fontsize=8, color="#666666")
     if len(groups) > 1:
         # Below the axes, not inside them: with five methods the in-plot legend
         # overlapped the title and the tallest bars, and entries collided with
@@ -260,7 +290,10 @@ def trajectory_figure(trajectories: Dict[str, Dict[str, List]], tiers: Sequence[
             })
         line_series(axis, series, "fraction of training budget", "AP [0.5:0.95]")
         axis.set_title(tier)
-    axes[-1].legend()
+    handles, labels = axes[0].get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="lower center", ncol=min(3, len(labels)),
+                   bbox_to_anchor=(0.5, -0.06))
     fig.tight_layout()
     return fig
 
