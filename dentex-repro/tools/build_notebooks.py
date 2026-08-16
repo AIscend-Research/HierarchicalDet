@@ -1118,6 +1118,16 @@ if HAS_GPU and FULL_WEIGHTS:
                         "03_evaluate_and_build_assets", run.mode, "figure:qualitative",
                         inputs=[predictions_path], note=json.dumps(curated))
     print(json.dumps(gallery_ids, indent=2))
+else:
+    # These two classes are produced only by the GPU sections above. Without an
+    # explicit "not run" record, a CPU-only pass fails the contract check at the
+    # very end -- after every table and figure it CAN build has been rebuilt.
+    # The contract requires each class to be ACCOUNTED FOR, not present.
+    for asset_class in ("figure:error_clusters", "figure:qualitative"):
+        figures.record_not_run(
+            asset_class, "03_evaluate_and_build_assets", run.mode,
+            "requires a GPU session: error analysis and the qualitative "
+            "overlays need model inference over the test images")
 '''),
         ("md", "## Low-resource benchmark — the CPU half is what a CPU session is for"),
         ("code", '''\
@@ -1441,6 +1451,12 @@ else:
 environment = manifest.load_manifest().get("environment", {})
 data_summary = setup_env.read_notebook_summary("01_setup_and_data") or {}
 records = [r for r in (training.get("records") or []) if r]
+if not records:
+    # Same fallback as the trajectory sweep: the summary lives in paper_assets
+    # and is easily separated from the checkpoints, but every run_record.json
+    # travels with runs/. Without this the checklist's "Compute actually spent"
+    # table renders empty, which would understate the study in the paper.
+    records = train_utils.discover_runs()
 
 lines = ["# Reproducibility checklist", "",
          "Generated from executed-run records only.", "",
