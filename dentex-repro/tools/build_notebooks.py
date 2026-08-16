@@ -996,9 +996,19 @@ if HAS_GPU:
 # released behaviour, which never injects at inference), so the jitter=0/drop=0
 # condition — not the main table — is this experiment's reference point.
 if HAS_GPU and FULL_WEIGHTS:
+    # Same trap as the checkpoints: notebook 02 recorded an absolute
+    # /kaggle/working path that does not resolve in this session, while the file
+    # itself sits in the attached dataset. Resolve by location, not by memory.
     prior_test = (training.get("noisy_boxes") or {}).get("prior_over_test")
-    assert prior_test and os.path.exists(prior_test), (
-        "notebook 02 must produce the enumeration model's predictions over the test split")
+    if not (prior_test and os.path.exists(prior_test)):
+        prior_test = train_utils.locate_run_artifact(
+            "noisy_boxes/enumeration_over_diagnosis_test.json")
+    assert prior_test, (
+        "the enumeration model's predictions over the test split were not found "
+        "locally or in any attached dataset "
+        "(runs/<mode>/noisy_boxes/enumeration_over_diagnosis_test.json). "
+        "Notebook 02 produces it; attach its output.")
+    print("prior-tier boxes:", prior_test)
     for condition in degradations.fault_grid(run):
         with eval_utils.noisy_box_inference(prior_test, jitter=condition["jitter"],
                                             drop=condition["drop"]):

@@ -268,6 +268,38 @@ def discover_runs(search_roots: Sequence[str] = ()) -> List[Dict[str, object]]:
     return [by_name[name] for name in sorted(by_name)]
 
 
+def locate_run_artifact(relative: str,
+                        search_roots: Sequence[str] = ()) -> Optional[str]:
+    """
+    Find any file under ``runs/<mode>/`` -- locally, or in an attached dataset.
+
+    The generalisation of :func:`locate_weights`. Notebook 02 records absolute
+    ``/kaggle/working/runs/...`` paths for its noisy-box dumps as well as its
+    checkpoints, and in a later session none of them resolve. Fixing that for
+    weights alone left the fault-injection experiment asserting on a prediction
+    file that was sitting in the attached dataset all along.
+
+    ``relative`` is the path below ``runs/<mode>/``, e.g.
+    ``"noisy_boxes/enumeration_over_diagnosis_test.json"``.
+    """
+    local = os.path.join(setup_env.RUNS_DIR, relative)
+    if os.path.exists(local):
+        return local
+
+    roots = list(search_roots) or (
+        sorted(glob.glob(os.path.join(setup_env.KAGGLE_INPUT, "*")))
+        if setup_env.ON_KAGGLE else []
+    )
+    mode = setup_env.ACTIVE_MODE
+    candidates = []
+    for root in roots:
+        for pattern in (os.path.join(root, "**", "runs", mode, relative),
+                        os.path.join(root, "**", mode, relative)):
+            candidates.extend(glob.glob(pattern, recursive=True))
+    candidates = sorted(set(candidates))
+    return max(candidates, key=os.path.getmtime) if candidates else None
+
+
 def locate_weights(run_name: str, filename: str = "model_final.pth",
                    search_roots: Sequence[str] = ()) -> Optional[str]:
     """
