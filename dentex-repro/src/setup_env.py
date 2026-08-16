@@ -36,7 +36,6 @@ PROJECT_ROOT = os.path.dirname(SRC_DIR)          # .../dentex-repro
 REPO_ROOT = os.path.dirname(PROJECT_ROOT)        # .../ (HierarchicalDet checkout)
 
 CONFIGS_REPRO = os.path.join(PROJECT_ROOT, "configs_repro")
-PAPER_ASSETS = os.path.join(PROJECT_ROOT, "paper_assets")
 NOTEBOOKS_DIR = os.path.join(PROJECT_ROOT, "notebooks")
 REQUIREMENTS_LOCK = os.path.join(SRC_DIR, "requirements.lock.txt")
 
@@ -65,6 +64,21 @@ RUNS_ROOT = os.environ.get(
 #: training entirely and silently build the paper from smoke-mode models. Mode
 #: in the path makes that impossible.
 RUNS_DIR = os.path.join(RUNS_ROOT, ACTIVE_MODE)
+
+#: The paper deliverables. On Kaggle these go at the TOP of /kaggle/working,
+#: beside runs/ -- not inside the cloned repo.
+#:
+#: They used to live at <repo clone>/dentex-repro/paper_assets, which put the
+#: entire output of the study three levels down inside a directory full of
+#: vendored framework code. In Kaggle's Output browser that is effectively
+#: invisible: a real run finished and the assets could not be found. It also
+#: meant the deliverables shared a directory with a checkout that gets wiped and
+#: re-cloned every session.
+PAPER_ASSETS = os.environ.get(
+    "DENTEX_PAPER_ASSETS",
+    os.path.join(KAGGLE_WORKING, "paper_assets") if ON_KAGGLE
+    else os.path.join(PROJECT_ROOT, "paper_assets"),
+)
 
 #: Converted DENTEX (notebook 01's output, republished as a Kaggle Dataset).
 DATA_DIR = os.environ.get(

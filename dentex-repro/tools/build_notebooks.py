@@ -1589,7 +1589,17 @@ if PUBLISH_KAGGLE_DATASET:
     setup_env.write_notebook_summary("03_evaluate_and_build_assets", summary)
 print(json.dumps({k: v for k, v in publish.items() if k not in ("stdout", "stderr")},
                  indent=2))
-print("\\npaper_assets/ is at:", setup_env.PAPER_ASSETS)
+print("\\n" + "=" * 72)
+print("PAPER ASSETS: {}".format(setup_env.PAPER_ASSETS))
+print("=" * 72)
+for directory, _subdirs, names in sorted(os.walk(setup_env.PAPER_ASSETS)):
+    relative = os.path.relpath(directory, setup_env.PAPER_ASSETS)
+    for name in sorted(names):
+        print("  {:<56} {:>8.1f} KB".format(
+            os.path.join(relative, name).lstrip("./"),
+            os.path.getsize(os.path.join(directory, name)) / 1024))
+print("\\nThese sit at the TOP of /kaggle/working, beside runs/ -- not inside")
+print("the cloned repo. Download them from the Output tab.")
 '''),
     ]
 
