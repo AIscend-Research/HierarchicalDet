@@ -140,6 +140,46 @@ def record_asset(path: str, asset_class: str, notebook: str, run_mode: str,
     return entry
 
 
+def missing_assets() -> Dict[str, List[str]]:
+    """
+    Asset classes the manifest claims to have produced whose files are absent.
+
+    A manifest that cites a figure nobody can open is worse than one that says
+    the figure was not produced: the citation is what a reader trusts.
+    """
+    missing: Dict[str, List[str]] = {}
+    for asset in load_manifest().get("assets", []):
+        if asset.get("status") != "produced":
+            continue
+        path = asset.get("path", "")
+        if not os.path.exists(os.path.join(setup_env.PROJECT_ROOT, path)):
+            missing.setdefault(asset.get("asset_class", "?"), []).append(path)
+    return missing
+
+
+def drop_missing(asset_class: str) -> int:
+    """
+    Forget entries of ``asset_class`` whose file is no longer on disk.
+
+    Needed when an asset class stops being produced: ``record_asset`` replaces
+    entries by path, so a class that goes from "produced" to "not run" keeps its
+    old rows, and the manifest goes on claiming a figure that is not there. Only
+    entries whose file is actually absent are dropped, so this can never discard
+    a genuine record. Returns how many were removed.
+    """
+    manifest = load_manifest()
+    assets = manifest.get("assets", [])
+    kept = [a for a in assets
+            if a.get("asset_class") != asset_class
+            or a.get("status") != "produced"
+            or os.path.exists(os.path.join(setup_env.PROJECT_ROOT, a.get("path", "")))]
+    removed = len(assets) - len(kept)
+    if removed:
+        manifest["assets"] = kept
+        _save(manifest)
+    return removed
+
+
 def record_environment(payload: Dict[str, object]) -> None:
     manifest = load_manifest()
     manifest["environment"] = payload

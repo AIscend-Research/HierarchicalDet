@@ -79,6 +79,29 @@ def build_eval_model(cfg):
     return model
 
 
+def prior_box_coverage(predictions_json: Optional[str],
+                       score_threshold: float = 0.5) -> Dict[str, object]:
+    """
+    How many prior-tier boxes would survive ``score_threshold``, and over how
+    many images. Cheap enough to call before an experiment commits to a GPU.
+    """
+    empty = {"boxes_total": 0, "boxes_kept": 0, "images_with_boxes": 0,
+             "score_threshold": score_threshold, "path": predictions_json}
+    if not predictions_json or not os.path.exists(predictions_json):
+        return empty
+    with open(predictions_json) as handle:
+        records = json.load(handle)
+    kept_images = set()
+    kept = 0
+    for record in records:
+        if record.get("score", 1.0) >= score_threshold:
+            kept += 1
+            kept_images.add(record.get("image_id"))
+    return {"boxes_total": len(records), "boxes_kept": kept,
+            "images_with_boxes": len(kept_images),
+            "score_threshold": score_threshold, "path": predictions_json}
+
+
 @contextlib.contextmanager
 def noisy_box_inference(predictions_json: Optional[str], jitter: float = 0.0,
                         drop: float = 0.0, score_threshold: float = 0.5):
@@ -94,7 +117,24 @@ def noisy_box_inference(predictions_json: Optional[str], jitter: float = 0.0,
 
     The detector reads these at construction, so the model must be built inside
     this context manager.
+
+    Yields a dict describing what the detector will actually have to work with.
+    If no prior box clears ``score_threshold`` the detector injects nothing and
+    runs the *unperturbed* model, so every severity in a fault-injection sweep
+    returns bit-identical numbers and the experiment reads as "the hierarchy is
+    insensitive to prior-tier quality" when it in fact never tested that. That
+    is a failed experiment, not a finding, so it raises here rather than
+    producing results.
     """
+    usable = prior_box_coverage(predictions_json, score_threshold)
+    if predictions_json and not usable["boxes_kept"]:
+        raise ValueError(
+            "inference-time box injection would be a no-op: none of {} prior-tier "
+            "predictions in {} scored >= {}. Running anyway would report the "
+            "unperturbed model as a fault-injection result. Lower "
+            "score_threshold, or use a prior-tier model that actually detects "
+            "something.".format(usable["boxes_total"], predictions_json,
+                                score_threshold))
     keys = {
         "NOISY_BOX_INFER": predictions_json or "",
         "NOISY_BOX_INFER_JITTER": str(jitter),
@@ -108,7 +148,7 @@ def noisy_box_inference(predictions_json: Optional[str], jitter: float = 0.0,
                 os.environ[key] = value
             else:
                 os.environ.pop(key, None)
-        yield
+        yield usable
     finally:
         for key, value in saved.items():
             if value is None:
@@ -321,7 +361,7 @@ def aggregate_seeds(runs: Sequence[Dict[str, object]]) -> Dict[str, object]:
     for tier_key in runs[0]["tiers"]:
         aggregate[tier_key] = {}
         for metric in ALL_METRICS:
-            values = [run["tiers"][tier_key]["metrics"].get(metric) for run in runs]
+            raw = [run["tiers"][tier_key]["metrics"].get(metric) for run in runs]
             # NaN is a float, so an isinstance check alone let it through and
             # statistics.stdev died on it ("inf or nan encountered in data").
             # The evaluator legitimately returns NaN -- COCOeval reports -1 for
@@ -329,10 +369,22 @@ def aggregate_seeds(runs: Sequence[Dict[str, object]]) -> Dict[str, object]:
             # _derive_coco_results turns into NaN -- so this is a normal input,
             # not a corrupt one, and it must be dropped rather than crash a
             # 2.5-hour evaluation at the aggregation step.
-            values = [v for v in values
+            values = [v for v in raw
                       if isinstance(v, (int, float)) and math.isfinite(v)]
             if not values:
-                aggregate[tier_key][metric] = {"mean": None, "std": None, "n": 0}
+                # Dropping NaN loses the difference between "the seeds all
+                # reported this metric as undefined" and "there were no seeds".
+                # Both used to collapse to None, which the table formatter
+                # prints as "not run" -- so every APm/APs cell claimed the
+                # experiment had been skipped when it had run and simply found
+                # no objects in that size bucket. Keep NaN for the first case;
+                # it formats as "n/a".
+                undefined = any(isinstance(v, float) and math.isnan(v) for v in raw)
+                aggregate[tier_key][metric] = {
+                    "mean": float("nan") if undefined else None,
+                    "std": float("nan") if undefined else None,
+                    "n": 0,
+                }
                 continue
             aggregate[tier_key][metric] = {
                 "mean": round(statistics.fmean(values), 4),
@@ -492,7 +544,38 @@ def load_result(name: str) -> Optional[Dict[str, object]]:
     if not os.path.exists(path):
         return None
     with open(path) as handle:
-        return json.load(handle)
+        return _repair_undefined_aggregates(json.load(handle))
+
+
+def _repair_undefined_aggregates(payload):
+    """
+    Restore the NaN that older aggregates flattened to None.
+
+    Results written before :func:`aggregate_seeds` kept the distinction store
+    ``{"mean": null, "n": 0}`` for a metric every seed reported as undefined,
+    which the table formatter renders as "not run" -- claiming an experiment was
+    skipped when it ran. The per-run metrics in the same file still carry the
+    NaN, so the truth is recoverable without re-evaluating anything.
+    """
+    if not isinstance(payload, dict):
+        return payload
+    aggregate = payload.get("aggregate")
+    runs = payload.get("runs")
+    if not isinstance(aggregate, dict) or not isinstance(runs, list):
+        return payload
+    for tier_key, metrics in aggregate.items():
+        if not isinstance(metrics, dict):
+            continue
+        for metric, cell in metrics.items():
+            if not isinstance(cell, dict) or cell.get("mean") is not None:
+                continue
+            observed = [(run.get("tiers", {}).get(tier_key, {})
+                         .get("metrics", {}) or {}).get(metric)
+                        for run in runs if isinstance(run, dict)]
+            if any(isinstance(v, float) and math.isnan(v) for v in observed):
+                cell["mean"] = float("nan")
+                cell["std"] = float("nan")
+    return payload
 
 
 # --------------------------------------------------------------------------
@@ -628,12 +711,22 @@ def error_analysis(predictions_json: str, ground_truth_json: str, tier: int,
                          for (actual, predicted), count in pairs.most_common()}
             for level, pairs in confusion.items()
         },
+        # None, not 0.0, when nothing was localised at this tier. The rate is a
+        # fraction of correctly localised boxes, so with no such boxes it is 0/0
+        # and undefined. Dividing by max(1, n) reported that case as a clean
+        # zero, which reads as "no label errors" -- the opposite of the truth,
+        # which is that there was nothing to get right or wrong. The denominator
+        # ships alongside it so any consumer can tell the two apart.
         "error_rate_by_tier": {
             str(level): (
                 round(sum(count for (a, p), count in confusion[level].items() if a != p)
-                      / max(1, sum(confusion[level].values())), 4)
+                      / sum(confusion[level].values()), 4)
+                if sum(confusion[level].values()) else None
             )
             for level in confusion
+        },
+        "labelled_boxes_by_tier": {
+            str(level): sum(confusion[level].values()) for level in confusion
         },
     }
 

@@ -29,28 +29,44 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(HERE)
 REPO_ROOT = os.path.dirname(PROJECT_ROOT)
 
-#: The asset build starts at this markdown cell and runs to the end of the
-#: notebook, minus the cells that need a live session.
-START_MARKER = "Asset build"
+#: The asset build starts at the cell bearing this marker and runs to the end of
+#: the notebook, minus the cells that need a live session. Everything before it
+#: evaluates checkpoints; everything from here on is a pure function of
+#: ``results_raw/``.
+START_MARKER = "---- Load every raw result ----"
 #: Cells that talk to Kaggle or need results this run did not produce.
 SKIP_IF_PRESENT = ("publish_kaggle_dataset", "write_notebook_summary")
 
 
 def notebook_cells(path: str):
+    """
+    Yield the asset-build cells, or raise if the marker has gone missing.
+
+    The marker used to be matched against markdown cells only. These notebooks
+    are generated and contain no markdown at all, so the scan fell through every
+    cell, yielded nothing, and the build reported success having written nothing
+    -- which is how the shipped figures came to predate their own fixes. A
+    marker that matches no cell is now a hard error.
+    """
     with open(path) as handle:
         notebook = json.load(handle)
     started = False
     for cell in notebook["cells"]:
         source = "".join(cell["source"])
         if not started:
-            if cell["cell_type"] == "markdown" and START_MARKER in source:
+            if START_MARKER in source:
                 started = True
-            continue
+            else:
+                continue
         if cell["cell_type"] != "code":
             continue
         if any(marker in source for marker in SKIP_IF_PRESENT):
             continue
         yield source
+    if not started:
+        raise LookupError(
+            "no cell in {} contains the start marker {!r}; the asset build would "
+            "have run zero cells and exited successfully.".format(path, START_MARKER))
 
 
 def main() -> int:

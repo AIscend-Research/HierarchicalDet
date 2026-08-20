@@ -233,10 +233,18 @@ def discover_runs(search_roots: Sequence[str] = ()) -> List[Dict[str, object]]:
         if setup_env.ON_KAGGLE else []
     )
     mode = setup_env.ACTIVE_MODE
-    patterns = [os.path.join(setup_env.RUNS_DIR, "*", "run_record.json")]
+    patterns = [
+        os.path.join(setup_env.RUNS_DIR, "*", "run_record.json"),
+        # Records retained into paper_assets by the final training notebook, so
+        # a machine holding only paper_assets/ (no runs/, no checkpoints) can
+        # still rebuild the Runs table and account for the training compute.
+        os.path.join(setup_env.RESULTS_RAW, "run_records", "*.json"),
+    ]
     for root in roots:
         patterns.append(os.path.join(root, "**", "runs", mode, "*", "run_record.json"))
         patterns.append(os.path.join(root, "**", mode, "*", "run_record.json"))
+        patterns.append(os.path.join(root, "**", "results_raw", mode,
+                                     "run_records", "*.json"))
 
     by_name: Dict[str, Dict[str, object]] = {}
     for pattern in patterns:

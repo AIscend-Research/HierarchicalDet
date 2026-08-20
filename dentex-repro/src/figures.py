@@ -14,6 +14,7 @@ House rules, enforced by :func:`use_paper_style` and :func:`save_figure`:
 from __future__ import annotations
 
 import os
+import textwrap
 from typing import Dict, List, Optional, Sequence
 
 from . import manifest, setup_env
@@ -51,8 +52,12 @@ def use_paper_style() -> None:
         "axes.spines.right": False,
         "lines.linewidth": 1.4,
         "lines.markersize": 4,
-        "pdf.fonttype": 42,      # embed TrueType, not Type 3 — required by most venues
+        "pdf.fonttype": 42,      # embed TrueType, not Type 3 - required by most venues
         "ps.fonttype": 42,
+        # Matplotlib renders negative ticks with U+2212 by default, which is one
+        # of the glyphs assert_no_banned_glyphs rejects. Emit ASCII instead, so
+        # the axis and the guard agree.
+        "axes.unicode_minus": False,
     })
 
 
@@ -125,8 +130,87 @@ def record_not_run(asset_class: str, notebook: str, run_mode: str, reason: str) 
     with open(placeholder, "w") as handle:
         handle.write("{} was not produced in RUN_MODE={}.\nReason: {}\n".format(
             asset_class, run_mode, reason))
+    manifest.drop_missing(asset_class)
     manifest.record_asset(placeholder, asset_class, notebook, run_mode,
                           status="not run", note=reason)
+
+
+# --------------------------------------------------------------------------
+# Tick labels
+# --------------------------------------------------------------------------
+def fit_xticklabels(ax, labels: Sequence[str], rotation: int = 0,
+                    fallback: int = 45) -> int:
+    """
+    Set x tick labels, rotating them only if flat ones would collide.
+
+    The enumeration tier has eight labels of the form ``1Enumeration``; laid out
+    flat they ran into each other and the axis read as one unbroken word. A
+    rotation hard-coded per tier is a guess about how wide the labels will be at
+    the final figure size, so measure the rendered extents and rotate only when
+    they actually overlap. Returns the rotation used.
+    """
+    ax.set_xticklabels(labels, rotation=rotation,
+                       ha="center" if rotation in (0, 90) else "right")
+    if rotation != 0:
+        return rotation
+    figure = ax.figure
+    figure.canvas.draw()
+    renderer = figure.canvas.get_renderer()
+    boxes = sorted((item.get_window_extent(renderer)
+                    for item in ax.get_xticklabels() if item.get_text()),
+                   key=lambda box: box.x0)
+    collides = any(later.x0 < earlier.x1 + 2.0
+                   for earlier, later in zip(boxes, boxes[1:]))
+    if collides:
+        ax.set_xticklabels(labels, rotation=fallback, ha="right")
+        return fallback
+    return rotation
+
+
+# --------------------------------------------------------------------------
+# Legend placement
+# --------------------------------------------------------------------------
+def legend_below(axes, handles=None, labels=None, ncol: int = 3, pad: float = 0.04):
+    """
+    Put the legend under ``axes``, clear of whatever is already down there.
+
+    A fixed offset in axes fractions cannot do this. ``bbox_to_anchor=(0.5,
+    -0.28)`` is measured from the top of the axes box, so it lands on the tick
+    labels as soon as they are rotated or long, and it lands *inside* the data
+    whenever the axes are short -- which is how every legend in the shipped
+    figures ended up sitting on the curves it was labelling.
+
+    So measure instead: draw once, find the lowest rendered extent of the tick
+    labels and the axis label, and anchor the legend below that in figure
+    coordinates. ``savefig(bbox_inches="tight")`` then crops to include it.
+
+    ``axes`` may be a single axes or a sequence, in which case the legend is
+    centred under the whole row.
+    """
+    axes = list(axes) if isinstance(axes, (list, tuple)) else [axes]
+    anchor = axes[0]
+    figure = anchor.figure
+    figure.canvas.draw()
+    renderer = figure.canvas.get_renderer()
+    to_figure = figure.transFigure.inverted()
+
+    bottom = min(axis.get_position().y0 for axis in axes)
+    for axis in axes:
+        below = list(axis.get_xticklabels()) + [axis.xaxis.label]
+        for item in below:
+            if not item.get_text():
+                continue
+            box = item.get_window_extent(renderer).transformed(to_figure)
+            bottom = min(bottom, box.y0)
+
+    left = min(axis.get_position().x0 for axis in axes)
+    right = max(axis.get_position().x1 for axis in axes)
+    if handles is None:
+        handles, labels = anchor.get_legend_handles_labels()
+    return anchor.legend(handles, labels, loc="upper center",
+                         bbox_to_anchor=((left + right) / 2.0, bottom - pad),
+                         bbox_transform=figure.transFigure,
+                         ncol=ncol, borderaxespad=0.0)
 
 
 # --------------------------------------------------------------------------
@@ -164,9 +248,8 @@ def sweep_figure(series: Sequence[Dict[str, object]], xlabel: str, ylabel: str,
     ax.set_title(title)
     # Outside the axes: with error bars these curves fill the panel, and an
     # in-plot legend sat on top of the data in every rendered figure.
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.32),
-              ncol=min(3, len(series)), borderaxespad=0.0)
     fig.tight_layout()
+    legend_below(ax, ncol=min(3, len(series)))
     return fig
 
 
@@ -183,6 +266,7 @@ def ap_vs_steps_figure(series: Sequence[Dict[str, object]],
     use_paper_style()
     fig, ax = plt.subplots(figsize=(SINGLE_COLUMN, SINGLE_COLUMN * 0.78))
     line_series(ax, series, "diffusion sampling steps", "AP [0.5:0.95]", logx=True)
+    handles, labels = ax.get_legend_handles_labels()
     if latency:
         twin = ax.twinx()
         steps = sorted(latency)
@@ -190,32 +274,28 @@ def ap_vs_steps_figure(series: Sequence[Dict[str, object]],
                   linestyle="--", marker="x", label="latency")
         twin.set_ylabel("seconds / image (measured)")
         twin.grid(False)
-        handles, labels = ax.get_legend_handles_labels()
         twin_handles, twin_labels = twin.get_legend_handles_labels()
-        ax.legend(handles + twin_handles, labels + twin_labels,
-                  loc="upper center", bbox_to_anchor=(0.5, -0.30),
-                  ncol=2, borderaxespad=0.0)
-    else:
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.30),
-                  ncol=2, borderaxespad=0.0)
+        handles, labels = handles + twin_handles, labels + twin_labels
     ax.set_xticks(sorted({x for entry in series for x in entry["x"]}))
     ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
+    fig.tight_layout()
+    legend_below(ax, handles, labels, ncol=2)
     return fig
 
 
 def grouped_bars(categories: Sequence[str], groups: Dict[str, Sequence[float]],
                  ylabel: str, title: str, width: float = DOUBLE_COLUMN,
-                 rotate: int = 90, absent: Sequence[str] = (),
-                 absent_note: str = "no test\nground truth"):
+                 rotate: int = 90):
     """
     Grouped bar chart (per-class AP, error clusters).
 
-    ``absent`` names categories that have **no ground truth at all**, which is
-    not the same as scoring zero. The released DENTEX test split contains no
-    Deep Caries annotations, so that class rendered as an unexplained empty gap
-    between populated bars -- a reader would read it as "the model never detects
-    deep caries" when the truth is that the class cannot be scored. Those
-    categories are shaded and labelled instead.
+    A category with **no ground truth at all** is not a category the model
+    failed on, and it has no bar to draw at any height. COCOeval reports NaN for
+    such a class; callers drop those categories before plotting and name them in
+    the caption, because an empty slot mid-axis reads as a measured zero.
+
+    Values may still be NaN or None for an individual series, in which case that
+    one bar is simply not drawn.
     """
     import matplotlib.pyplot as plt
     import numpy as np
@@ -223,37 +303,52 @@ def grouped_bars(categories: Sequence[str], groups: Dict[str, Sequence[float]],
     use_paper_style()
     fig, ax = plt.subplots(figsize=(width, width * 0.34))
     positions = np.arange(len(categories))
+    # None means "not measured" and must not be plotted as a value; NaN is how
+    # matplotlib says "draw nothing here".
+    groups = {label: [float("nan") if value is None else float(value)
+                      for value in values]
+              for label, values in groups.items()}
     count = max(1, len(groups))
     bar_width = 0.8 / count
     hatches = ("", "//", "..", "xx", "\\\\", "++")
     for index, (label, values) in enumerate(groups.items()):
-        ax.bar(positions + index * bar_width - 0.4 + bar_width / 2, values,
-               width=bar_width, label=label, color=PALETTE[index % len(PALETTE)],
+        offsets = positions + index * bar_width - 0.4 + bar_width / 2
+        colour = PALETTE[index % len(PALETTE)]
+        ax.bar(offsets, values, width=bar_width, label=label, color=colour,
                hatch=hatches[index % len(hatches)], edgecolor="white", linewidth=0.4)
-    absent = set(absent)
-    for index, category in enumerate(categories):
-        if category in absent:
-            ax.axvspan(index - 0.45, index + 0.45, color="#d9d9d9", alpha=0.55,
-                       zorder=0, linewidth=0)
-            ax.text(index, ax.get_ylim()[1] * 0.5, absent_note, ha="center",
-                    va="center", fontsize=6, color="#444444", zorder=3)
-
+        # A bar of height exactly zero is invisible, and an invisible bar reads
+        # as an absent one -- the very distinction this figure is drawn to make.
+        # Mark measured zeros with a rule on the axis so "we scored it and it is
+        # zero" cannot be confused with "there was nothing to score".
+        for offset, value in zip(offsets, values):
+            if value == 0:
+                ax.plot([offset - bar_width / 2, offset + bar_width / 2], [0, 0],
+                        color=colour, linewidth=1.6, solid_capstyle="butt",
+                        zorder=4, clip_on=False)
     ax.set_xticks(positions)
-    ax.set_xticklabels(categories, rotation=rotate,
-                       ha="center" if rotate in (0, 90) else "right")
+    fit_xticklabels(ax, categories, rotate)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    if not any(any(v for v in values) for values in groups.values()):
-        # An all-zero chart renders as an empty box with no explanation.
-        ax.text(0.5, 0.5, "all values are zero", transform=ax.transAxes,
-                ha="center", va="center", fontsize=8, color="#666666")
+    drawn = [value for values in groups.values() for value in values if value == value]
+    if not drawn or not any(drawn):
+        # An empty or all-zero chart renders as a blank box with no explanation,
+        # and a reader fills that in with the flattering reading. Say which it
+        # is: nothing measurable, or measured and zero.
+        message = "no values to plot" if not drawn else "all values are zero"
+        if not drawn:
+            # Otherwise the y axis autoscales to a meaningless +/- 0.05 around
+            # nothing at all.
+            ax.set_ylim(0.0, 1.0)
+        # Wrapped by hand: matplotlib's wrap= measures against the figure width,
+        # so the note ran out over the tick labels and past the panel edge.
+        ax.text(0.5, 0.5, textwrap.fill(message, 38), transform=ax.transAxes,
+                ha="center", va="center", fontsize=7, color="#666666")
+    fig.tight_layout()
     if len(groups) > 1:
         # Below the axes, not inside them: with five methods the in-plot legend
         # overlapped the title and the tallest bars, and entries collided with
-        # each other.
-        ax.legend(ncol=min(3, len(groups)), loc="upper center",
-                  bbox_to_anchor=(0.5, -0.28), borderaxespad=0.0)
-    fig.tight_layout()
+        # each other. Measured, because the rotated class names are tall.
+        legend_below(ax, ncol=min(3, len(groups)))
     return fig
 
 
@@ -292,9 +387,12 @@ def degradation_figure(by_kind: Dict[str, List[Dict[str, float]]],
         axis.set_xlabel(KIND_XLABEL.get(kind, "severity"))
         if index == 0:
             axis.set_ylabel(ylabel)
-            if baseline is not None:
-                axis.legend(loc="best")
     fig.tight_layout()
+    if baseline is not None:
+        # Under the row rather than loc="best" inside panel 0: "best" only
+        # avoids the data it can see, and the baseline it labels is a rule
+        # spanning the full width of every panel.
+        legend_below(list(axes), ncol=1)
     return fig
 
 
@@ -335,11 +433,10 @@ def trajectory_figure(trajectories: Dict[str, Dict[str, List]], tiers: Sequence[
             })
         line_series(axis, series, "fraction of training budget", "AP [0.5:0.95]")
         axis.set_title(tier)
+    fig.tight_layout()
     handles, labels = axes[0].get_legend_handles_labels()
     if handles:
-        fig.legend(handles, labels, loc="lower center", ncol=min(3, len(labels)),
-                   bbox_to_anchor=(0.5, -0.06))
-    fig.tight_layout()
+        legend_below(list(axes), handles, labels, ncol=min(3, len(labels)))
     return fig
 
 

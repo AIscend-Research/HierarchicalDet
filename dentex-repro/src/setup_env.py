@@ -123,7 +123,18 @@ def assert_notebook_current(notebook: str, build: str) -> Dict[str, str]:
     with open(NOTEBOOK_BUILDS) as handle:
         expected = json.load(handle).get(notebook)
     if expected is None:
-        return {"status": "unknown", "reason": "no fingerprint recorded for " + notebook}
+        # Not "unknown" -- FUTURE. Every notebook that calls this ships in the
+        # repo, so a clone with no fingerprint for it predates the notebook:
+        # the cells reference code the checkout does not have yet. A session
+        # was allowed through here and trained for 2.25 hours before dying on
+        # a function that existed only in an unpushed working tree.
+        raise RuntimeError(
+            "UNPUSHED NOTEBOOK: this checkout has no fingerprint for {} -- the "
+            "cells you are running were generated from a NEWER repo state than "
+            "the one cloned here, and will call code this checkout does not "
+            "contain.\nFix: commit and push the repo (src/, tools/, notebooks/, "
+            "src/notebook_build.json), then re-run.".format(notebook)
+        )
     if expected != build:
         raise RuntimeError(
             "STALE NOTEBOOK: the cells you are running were generated as {} but the "

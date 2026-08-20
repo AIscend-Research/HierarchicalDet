@@ -216,6 +216,13 @@ class DiffusionDet(nn.Module):
         # coordinates; random drop fraction) to measure how sensitive tier k is
         # to imperfect tier k-1 predictions.
         self.infer_boxes_by_image = {}
+        # Injection can silently do nothing (no prior box cleared the score
+        # threshold, or an image in the batch contributed none). These counters
+        # are what lets a result file show which happened, instead of a
+        # fault-injection sweep quietly reporting the clean baseline six times.
+        self.infer_boxes_applied = 0
+        self.infer_boxes_skipped_empty = 0
+        self.infer_boxes_skipped_no_overlap = 0
         self.infer_box_jitter = float(os.environ.get("NOISY_BOX_INFER_JITTER", 0.0))
         self.infer_box_drop = float(os.environ.get("NOISY_BOX_INFER_DROP", 0.0))
         self.infer_box_score_thresh = float(os.environ.get("NOISY_BOX_INFER_SCORE", 0.5))
@@ -338,6 +345,12 @@ class DiffusionDet(nn.Module):
         no-op).
         """
         if not self.infer_boxes_by_image:
+            # No prior boxes survived the score threshold, so this returns None
+            # and the caller falls back to pure random proposals -- i.e. the
+            # unperturbed model. Counted, because a fault-injection sweep that
+            # silently degenerates to the clean baseline reports every severity
+            # as identical and looks like robustness.
+            self.infer_boxes_skipped_empty += 1
             return None
 
         per_image = []
@@ -363,7 +376,12 @@ class DiffusionDet(nn.Module):
 
         n = min(b.shape[0] for b in per_image)
         if n == 0:
+            # At least one image in the batch had no prior box, so nothing can
+            # be stacked and the whole batch runs unperturbed. Same silent
+            # degeneration as above, counted separately.
+            self.infer_boxes_skipped_no_overlap += 1
             return None
+        self.infer_boxes_applied += 1
         return torch.stack([b[:n] for b in per_image], dim=0)
 
     def predict_noise_from_start(self, x_t, t, x0):

@@ -784,7 +784,11 @@ print("GPU available:", HAS_GPU, "->", "full pass" if HAS_GPU
 paths = data_convert.layout()
 CFG = {name: os.path.join(setup_env.CONFIGS_REPRO, "diffdet.dentex.{}.yaml".format(name))
        for name in ("quadrant", "enumeration", "diagnosis", "base_diffusiondet")}
-training = setup_env.read_notebook_summary("02_train_all") or {}
+# The final training run (notebook 04) supersedes notebook 02's summary when
+# both exist; either satisfies the same contract, and everything below also
+# falls back to resolving runs by name so a summary is never load-bearing.
+training = (setup_env.read_notebook_summary("04_final_training_run")
+            or setup_env.read_notebook_summary("02_train_all") or {})
 weights = training.get("weights") or {}
 FULL_WEIGHTS = train_utils.locate_weights("diagnosis_full")
 
@@ -808,8 +812,9 @@ for variant in (weights.get("variants") or setup_env.VARIANT_SWITCHES):
         models[setup_env.VARIANT_LABELS[variant]] = {
             "weights": path, "config": CFG["diagnosis"], "tier": 2,
             "overrides": [], "json_override": None, "run_name": run_name}
-for tier_str in (weights.get("base") or {}):
-    tier = int(tier_str)
+# Probed, not read from the summary: a base model trained by a session whose
+# summary was lost would otherwise silently drop out of the evaluation.
+for tier in (0, 1, 2):
     run_name = "base_diffusiondet_tier{}".format(tier)
     path = train_utils.locate_weights(run_name)
     if path:
@@ -1009,18 +1014,32 @@ if HAS_GPU and FULL_WEIGHTS:
         "(runs/<mode>/noisy_boxes/enumeration_over_diagnosis_test.json). "
         "Notebook 02 produces it; attach its output.")
     print("prior-tier boxes:", prior_test)
+    # Check before spending a GPU on it. If nothing clears the score threshold
+    # the detector injects nothing and every condition below would return the
+    # unperturbed model's numbers, identically -- which is what a previous run
+    # of this experiment published: six conditions, one set of values.
+    coverage = eval_utils.prior_box_coverage(prior_test)
+    print("prior boxes usable: {boxes_kept}/{boxes_total} over {images_with_boxes} "
+          "images (score >= {score_threshold})".format(**coverage))
+if HAS_GPU and FULL_WEIGHTS and coverage["boxes_kept"]:
     for condition in degradations.fault_grid(run):
         with eval_utils.noisy_box_inference(prior_test, jitter=condition["jitter"],
-                                            drop=condition["drop"]):
+                                            drop=condition["drop"]) as injection:
             payload = eval_utils.evaluate_multi_seed(
                 FULL_WEIGHTS, CFG["diagnosis"], run.robustness_seeds,
                 split="diagnosis_test", tier=2, limit=run.eval_limit)
         payload["condition"] = condition
+        # Stored so the result proves the perturbation was actually applied.
+        payload["injection"] = injection
         eval_utils.save_result(
             manifest.result_name("fault", condition=condition["label"]), payload)
         print("{:16s} ({:s}) diagnosis AP {:.2f}".format(
             condition["label"], condition["axis"],
             payload["aggregate"]["diagnosis"]["AP"]["mean"]))
+elif HAS_GPU and FULL_WEIGHTS:
+    print("SKIPPED: no prior-tier box scored above the threshold, so injection "
+          "would be a no-op and every condition would return the clean baseline.")
+if HAS_GPU and FULL_WEIGHTS:
     setup_env.log_deviation(
         "inference-time prior-tier box injection used for the fault-injection experiment",
         "the released code injects prior-tier boxes only during training; the "
@@ -1044,21 +1063,13 @@ if HAS_GPU and FULL_WEIGHTS:
     print(json.dumps(analysis["totals"], indent=2))
     print("\\nerror rate by tier (wrong label among correctly localised boxes):")
     for tier, rate in analysis["error_rate_by_tier"].items():
-        print("  tier {}: {:.3f}".format(tier, rate))
+        boxes = analysis["labelled_boxes_by_tier"][tier]
+        print("  tier {}: {} (over {} localised boxes)".format(
+            tier, "n/a" if rate is None else "{:.3f}".format(rate), boxes))
     for tier, pairs in analysis["confusion"].items():
         print("  tier {} top confusions: {}".format(tier, list(pairs.items())[:5]))
-
-    figure = figures.grouped_bars(
-        ["quadrant", "enumeration", "diagnosis"],
-        {"wrong label": [analysis["error_rate_by_tier"][str(t)] for t in range(3)]},
-        "fraction of localised boxes with the wrong label",
-        "Where errors cluster across the hierarchy",
-        width=figures.SINGLE_COLUMN, rotate=0)
-    figures.save_figure(figure, "error_clusters",
-                        "Per-tier classification error rate among correctly localised "
-                        "detections (IoU >= 0.5), full model, test split.",
-                        "03_evaluate_and_build_assets", run.mode, "figure:error_clusters",
-                        inputs=[predictions_path, paths["test_diagnosis"]])
+# The error_clusters figure itself is drawn in the asset build, from the saved
+# result rather than from this session's predictions, so it rebuilds offline.
 '''),
         ("code", '''\
 # ---- Failure gallery and curated overlays ----
@@ -1087,12 +1098,28 @@ if HAS_GPU and FULL_WEIGHTS:
         return {"image_path": os.path.join(paths["img_test"], by_id[image_id]["file_name"]),
                 "title": title, "gt": gt, "pred": pred}
 
+    # Both figures below are titled "ground truth vs prediction". With no
+    # prediction above threshold they draw ground truth only, and a reader takes
+    # the ground-truth boxes for the model's output landing on every tooth --
+    # the figure then asserts the opposite of the result. Refuse to draw rather
+    # than publish that.
+    drawable_predictions = sum(len(v) for v in pred_by_image.values())
+    print("predictions above threshold: {} over {} images".format(
+        drawable_predictions, len(pred_by_image)))
     gallery = eval_utils.select_gallery_cases(analysis, per_category=2)
     gallery_ids, panels = {}, []
     for bucket, rows in gallery.items():
         gallery_ids[bucket] = [r["image_id"] for r in rows]
         for row in rows:
             panels.append(panel(row["image_id"], "{}\\n{}".format(bucket, row["file_name"])))
+    if not drawable_predictions:
+        figures.record_not_run(
+            "figure:qualitative", "03_evaluate_and_build_assets", run.mode,
+            "no detection scored above 0.5, so both qualitative figures would "
+            "show ground-truth boxes only while captioned as prediction-vs-truth "
+            "comparisons. {} ground-truth boxes, 0 predictions.".format(
+                sum(len(v) for v in gt_by_image.values())))
+        panels = []
     if panels:
         figure = figures.overlay_grid(panels, columns=4, panel_height=2.0,
                                       title="Failure gallery. Blue solid: ground truth, "
@@ -1103,20 +1130,24 @@ if HAS_GPU and FULL_WEIGHTS:
                             "03_evaluate_and_build_assets", run.mode, "figure:qualitative",
                             inputs=[predictions_path], note=json.dumps(gallery_ids))
 
-    with open(os.path.join(paths["subsets"], "clean_stress.json")) as handle:
-        subsets = json.load(handle)
-    curated = subsets["clean"]["image_ids"][:6] + subsets["stress"]["image_ids"][:6]
-    panels = [panel(i, "{} ({})".format(
-        by_id[i]["file_name"],
-        "clean" if i in subsets["clean"]["image_ids"] else "stress"))
-        for i in curated if i in by_id]
-    figure = figures.overlay_grid(panels, columns=4, panel_height=2.0,
-                                  title="Prediction vs ground truth, 12 curated test images")
-    figures.save_figure(figure, "qualitative_overlays",
-                        "Full-model predictions (orange, dashed) against ground truth "
-                        "(blue, solid) on six clean and six stress-subset test images.",
-                        "03_evaluate_and_build_assets", run.mode, "figure:qualitative",
-                        inputs=[predictions_path], note=json.dumps(curated))
+    if drawable_predictions:
+        with open(os.path.join(paths["subsets"], "clean_stress.json")) as handle:
+            subsets = json.load(handle)
+        curated = subsets["clean"]["image_ids"][:6] + subsets["stress"]["image_ids"][:6]
+        panels = [panel(i, "{} ({})".format(
+            by_id[i]["file_name"],
+            "clean" if i in subsets["clean"]["image_ids"] else "stress"))
+            for i in curated if i in by_id]
+        figure = figures.overlay_grid(
+            panels, columns=4, panel_height=2.0,
+            title="Prediction vs ground truth, 12 curated test images")
+        figures.save_figure(figure, "qualitative_overlays",
+                            "Full-model predictions (orange, dashed) against ground "
+                            "truth (blue, solid) on six clean and six stress-subset "
+                            "test images.",
+                            "03_evaluate_and_build_assets", run.mode,
+                            "figure:qualitative",
+                            inputs=[predictions_path], note=json.dumps(curated))
     print(json.dumps(gallery_ids, indent=2))
 else:
     # These two classes are produced only by the GPU sections above. Without an
@@ -1211,6 +1242,7 @@ fault_results = collect("fault", "condition")
 runtime_results = collect("runtime", "model")
 lowresource = collect("lowresource", "device")
 trajectories = collect("trajectory", "variant")
+error_results = collect("errors", "model")
 subset_results = {}
 for name in manifest.list_results("subset"):
     parts = manifest.parse_result_name(name)
@@ -1353,7 +1385,62 @@ if degradation_results:
 else:
     figures.record_not_run("figure:degradation", NB, run.mode, "degradation grid not run")
 
-if fault_results:
+if error_results:
+    # Drawn from the saved error analysis, not from live predictions, so it
+    # rebuilds without a GPU like every other figure here.
+    analysis = error_results.get("Ours_full") or list(error_results.values())[0]
+    # A rate over zero localised boxes is undefined, not zero. Results written
+    # before error_analysis started saying so report a flat 0.0 for that case,
+    # so recover the denominator: labelled_boxes_by_tier when it is there, and
+    # the localised-box total when it is not.
+    localised = analysis.get("labelled_boxes_by_tier") or {
+        str(t): analysis["totals"].get("localised", 0) for t in range(3)}
+    rates = [analysis["error_rate_by_tier"].get(str(t)) if localised.get(str(t)) else None
+             for t in range(3)]
+    if not any(r is not None for r in rates):
+        # Nothing to draw, so draw nothing. The panel would be empty whatever
+        # is written on it, and an empty bar chart titled "where errors cluster"
+        # invites the reader to conclude that errors cluster nowhere. The reason
+        # goes in the manifest instead, where it cannot be skimmed past.
+        figures.record_not_run(
+            "figure:error_clusters", NB, run.mode,
+            "no detection scored above {:.2f}, so no box was correctly localised "
+            "and the per-tier label error rate is undefined, not zero "
+            "({} ground-truth boxes, {} predictions)".format(
+                analysis["score_threshold"], analysis["totals"].get("gt", 0),
+                analysis["totals"].get("pred", 0)))
+    else:
+        figure = figures.grouped_bars(
+            ["quadrant", "enumeration", "diagnosis"],
+            {"wrong label": rates},
+            "wrong-label fraction",
+            "Where errors cluster across the hierarchy",
+            width=figures.SINGLE_COLUMN, rotate=0)
+        figures.save_figure(figure, "error_clusters",
+                            "Per-tier classification error rate among correctly "
+                            "localised detections (IoU >= 0.5) for the full model on "
+                            "the test split. Denominator by tier: {}.".format(
+                                ", ".join("{} {}".format(k, v)
+                                          for k, v in sorted(localised.items()))),
+                            NB, run.mode, "figure:error_clusters")
+else:
+    figures.record_not_run("figure:error_clusters", NB, run.mode, "no error analysis")
+
+if fault_results and len({
+        json.dumps((p.get("aggregate", {}).get("diagnosis", {}).get("AP", {}) or {})
+                   .get("values"))
+        for p in fault_results.values()}) == 1:
+    # Every severity returned bit-identical per-seed values, which no stochastic
+    # perturbation does. It means injection never happened and each "condition"
+    # is really the clean baseline. Plotting it plots a flat line captioned as
+    # evidence of robustness.
+    figures.record_not_run(
+        "figure:fault_injection", NB, run.mode,
+        "all {} fault conditions returned identical per-seed AP values, so the "
+        "prior-tier perturbation was not applied (the detector injects nothing "
+        "when no prior box clears the score threshold). The experiment did not "
+        "test what it claims to test.".format(len(fault_results)))
+elif fault_results:
     series = []
     for axis in ("jitter", "drop"):
         points = []
@@ -1389,31 +1476,45 @@ if per_class:
         if not rows:
             continue
         classes = sorted({r["class"] for r in rows})
+        # NaN, not 0.0, when a method has no row for a class: an absent
+        # measurement is not a measured zero, and matplotlib draws no bar for it.
         groups = {method: [next((r["AP_mean"] for r in rows
-                                 if r["method"] == method and r["class"] == klass), 0.0)
+                                 if r["method"] == method and r["class"] == klass),
+                                float("nan"))
                            for klass in classes]
                   for method in sorted({r["method"] for r in rows})}
         # A class with NO test ground truth is not a class the model failed on.
         # The released DENTEX test split has no Deep Caries annotations at all
         # (see the data audit), so it must be marked, not left as a blank gap a
-        # reader would misread as "never detected".
-        with open(paths["test_diagnosis"]) as handle:
-            truth_json = json.load(handle)
-        level = {"quadrant": 1, "enumeration": 2, "diagnosis": 3}[tier]
-        labelled = {a.get("category_id_{}".format(level))
-                    for a in truth_json["annotations"]}
-        names = {str(c["name"]) for c in truth_json["categories_{}".format(level)]
-                 if c["id"] in labelled}
-        absent = [c for c in classes if c not in names]
+        # reader would misread as "never detected". COCOeval already says so:
+        # it scores such a class NaN for every model and every seed. Reading it
+        # back out of the results rather than re-deriving it from the annotation
+        # file keeps the figure a pure function of results_raw/, so it rebuilds
+        # on a machine that has no dataset attached.
+        absent = [klass for index, klass in enumerate(classes)
+                  if all(values[index] != values[index]       # NaN is not equal to itself
+                         for values in groups.values())]
+        # Dropped from the plot rather than drawn as an empty slot: an
+        # unscoreable class has no bar to show at any height, and a gap in the
+        # middle of the axis only invites the reader to guess what it means.
+        # The caption carries it instead, so it stays on the record.
         if absent:
-            print("  {} tier: no test ground truth for {}".format(tier, absent))
+            print("  {} tier: no test ground truth for {}, dropped from the "
+                  "figure".format(tier, absent))
+            keep = [index for index, klass in enumerate(classes) if klass not in absent]
+            classes = [classes[index] for index in keep]
+            groups = {method: [values[index] for index in keep]
+                      for method, values in groups.items()}
         figure = figures.grouped_bars(classes, groups, "AP [0.5:0.95]",
                                       "Per-class AP, {} tier (our extension)".format(tier),
-                                      rotate=45 if tier == "diagnosis" else 0,
-                                      absent=absent)
+                                      rotate=45 if tier == "diagnosis" else 0)
         figures.save_figure(figure, "per_class_ap_{}".format(tier),
                             "Per-class AP at the {} tier. OUR EXTENSION: the original "
-                            "paper reports tier-level aggregates only.".format(tier),
+                            "paper reports tier-level aggregates only.{}".format(
+                                tier,
+                                " Not shown: {}, which the released test split does "
+                                "not annotate at all, so no AP can be computed for "
+                                "it.".format(", ".join(absent)) if absent else ""),
                             NB, run.mode, "figure:per_class_ap")
 else:
     figures.record_not_run("figure:per_class_ap", NB, run.mode, "no evaluation results")
@@ -1521,31 +1622,121 @@ print("\\n".join(lines[:35]))
         ("code", '''\
 # ---- scope_and_claims.md: the claim-coverage matrix ----
 tested_models = set(main_results)
+
+# A model that scores essentially nothing cannot support a claim, however the
+# arms happen to be ordered. "Ours_full beats Ours_wo_Manipulation" was being
+# reported as "tested" off 4.97 AP against 2.78 AP, both about a tenth of the
+# paper's numbers -- an ordering that undertraining reproduces just as easily as
+# the mechanism does. Below this floor a claim is downgraded, so no reader has
+# to work out the scale for themselves.
+DEGENERATE_AP = 10.0
+reference = tables.reference_lookup()
+
+
+def _headline_ap(model):
+    cell = ((main_results.get(model) or {}).get("aggregate", {})
+            .get("diagnosis", {}).get("AP", {}) or {})
+    return cell.get("mean")
+
+
+def _too_weak_to_test(models):
+    """Models present in this run whose AP is too low to carry a conclusion."""
+    weak = []
+    for model in models:
+        value = _headline_ap(model)
+        if value is not None and value == value and value < DEGENERATE_AP:
+            paper = (reference.get("diagnosis", {}).get(model, {}) or {}).get("AP")
+            weak.append("{} AP {:.2f}{}".format(
+                model, value, " vs {:.1f} reported".format(paper) if paper else ""))
+    return weak
+
+
+asset_status = {row["asset_class"]: row["status"] for row in manifest.summary_table()}
+
 coverage = []
 for claim in tables.PAPER_CLAIMS:
     status, evidence = claim["default_status"], claim["evidence"]
+    unproduced = [a for a in claim.get("requires_assets", [])
+                  if asset_status.get(a, "not run") != "produced"]
+    if unproduced:
+        status = "partially supported"
+        evidence = "{}; NOT supported by: {} (recorded as not run)".format(
+            evidence, ", ".join(unproduced))
     if claim.get("requires_models"):
         missing = [m for m in claim["requires_models"] if m not in tested_models]
         if missing:
             status = "cited, untested"
             evidence = "not trained in RUN_MODE={} (missing: {})".format(
                 run.mode, ", ".join(missing))
+        elif status == "tested":
+            weak = _too_weak_to_test(claim["requires_models"])
+            if weak:
+                status = "undertrained, not conclusive"
+                evidence = ("{}; every arm is far below the reported scale ({}), so "
+                            "the ordering cannot be separated from undertraining"
+                            .format(evidence, "; ".join(weak)))
     coverage.append({**claim, "status": status, "evidence": evidence})
 
-gpu_hours = setup_env.gpu_hours_spent()
+# Operator-reported wall-clock for the whole study, including the training
+# sessions whose run records were not retained. It is a recollection, not a
+# measurement, so it is reported separately from the hours this repository can
+# actually account for and is never summed with them. Set to None if unknown.
+OPERATOR_REPORTED_GPU_HOURS = 22.15
+
+# What the artifacts themselves can account for: training wall time from the
+# run records (discover_runs also reads the copies the final training notebook
+# retains under results_raw/<mode>/run_records/, deduplicated by stage name),
+# plus the wall_seconds every evaluation run stores in its own result file.
+training_hours = sum(float(r.get("wall_seconds") or 0.0)
+                     for r in records if r.get("device") != "cpu") / 3600.0
+eval_seconds = 0.0
+for _collection in (main_results, step_results, degradation_results, fault_results,
+                    subset_results, runtime_results, trajectories, error_results):
+    for _payload in (_collection or {}).values():
+        for _run in ((_payload or {}).get("runs") or []):
+            if isinstance(_run, dict) and _run.get("device") != "cpu":
+                eval_seconds += float(_run.get("wall_seconds") or 0.0)
+measured_hours = training_hours + eval_seconds / 3600.0
+
+_compute_line = "Run mode: **{}**. GPU-hours accounted for by the run records here: **{:.2f}**.".format(
+    run.mode, measured_hours)
+if OPERATOR_REPORTED_GPU_HOURS is not None:
+    _compute_line += (" Operator-reported total for the study: **{:.2f}** "
+                      "(recollected, not measured; see Compute actually spent)."
+                      .format(OPERATOR_REPORTED_GPU_HOURS))
 lines = ["# Scope, claims and what a reviewer can re-verify", "",
-         "Run mode: **{}**. Measured GPU-hours actually spent: **{:.2f}**."
-         .format(run.mode, gpu_hours), "",
+         _compute_line, "",
          "## Claim coverage", "",
          "| # | Claim in the original paper | Status | Evidence |", "|---|---|---|---|"]
 for index, claim in enumerate(coverage, 1):
     lines.append("| {} | {} | {} | {} |".format(
         index, claim["claim"], claim["status"], claim["evidence"]))
 
-lines += ["", "## Compute actually spent", "", "| run | wall (s) | GPUs |", "|---|---|---|"]
+lines += ["", "## Compute actually spent", "",
+          "Two different things, kept apart on purpose.", "",
+          "| source | GPU-hours | provenance |", "|---|---|---|",
+          "| training runs (retained run records) | {:.2f} | measured; "
+          "`run_record.json` per stage |".format(training_hours),
+          "| evaluation runs in `results_raw/` | {:.2f} | measured; every run "
+          "records its own `wall_seconds` |".format(eval_seconds / 3600.0),
+          "| total measured | {:.2f} | sum of the two rows above |".format(
+              measured_hours)]
+if OPERATOR_REPORTED_GPU_HOURS is not None:
+    lines.append("| whole study, operator-reported | {:.2f} | **recollected, not "
+                 "measured** |".format(OPERATOR_REPORTED_GPU_HOURS))
+if not training_hours:
+    lines += ["",
+              "The gap is training. Training ran in earlier sessions whose "
+              "`runs/*/run_record.json` files were not carried into this repository, "
+              "so the training cost cannot be derived from anything here and is not "
+              "independently checkable. Notebook 04 retains those records into "
+              "`results_raw/<mode>/run_records/`, which closes the gap."]
+lines += ["", "| run | wall (s) | GPUs |", "|---|---|---|"]
 for record in records:
     lines.append("| {} | {} | {} |".format(
         record.get("name"), record.get("wall_seconds"), record.get("num_gpus")))
+if not records:
+    lines.append("| no training run records were retained | n/a | n/a |")
 
 lines += ["", "## Re-verifying without retraining", "",
           "Attach `{}` and `{}`, open `notebooks/03_evaluate_and_build_assets.ipynb` "
@@ -1566,6 +1757,19 @@ print("\\n".join(lines[:30]))
 '''),
         ("code", '''\
 # ---- Contract check: nothing may be cited that is not in the manifest ----
+# ... and nothing in the manifest may be missing from disk. An entry claiming
+# "produced" for a file that is not here is a citation a reader cannot follow,
+# which is worse than an honest "not run". Downgrade those before asserting.
+for asset_class, paths in sorted(manifest.missing_assets().items()):
+    print("cited but absent, downgrading to 'not run': {} -> {}".format(
+        asset_class, ", ".join(paths)))
+    recorder = tables if asset_class.startswith("table:") else figures
+    recorder.record_not_run(
+        asset_class, NB, run.mode,
+        "the manifest cited this asset but the file is not in this repository "
+        "({}). It was produced by a session whose output was not carried "
+        "across.".format(", ".join(paths)))
+
 contract = manifest.assert_asset_classes()
 print(json.dumps(contract, indent=2))
 print()
@@ -1584,7 +1788,8 @@ summary = {
     "contract": contract,
     "ablation_ordering": ordering,
     "ablation_ordering_stable": stable,
-    "gpu_hours_spent": gpu_hours,
+    "gpu_hours_measured": measured_hours,
+    "gpu_hours_training": training_hours,
     "manifest": manifest.MANIFEST_PATH,
 }
 ''')),
@@ -1620,6 +1825,376 @@ print("the cloned repo. Download them from the Output tab.")
 # --------------------------------------------------------------------------
 # Optional extras
 # --------------------------------------------------------------------------
+def notebook_04():
+    return [
+        ("md", """\
+# 04 - Final training run
+
+One notebook, one session sequence, for the training that the paper's numbers
+come from. It runs the same stages as notebook 02 through the same
+`train_utils` helpers, and then does the four things an audit of
+`paper_assets/` found missing.
+
+**Settings:** Accelerator -> *GPU T4 x2*, Internet -> *On*, Persistence ->
+*Variables and files*. Attach `dentex-repro-data`, and `dentex-repro-ckpts` on
+any re-run. Re-run in a fresh session until it reaches the end; every stage
+resumes from its last checkpoint and completed stages are skipped.
+
+## What this notebook adds over notebook 02
+
+1. **Run records are retained.** Notebook 02 wrote `runs/<mode>/*/run_record.json`
+   and left them in the session. They were never carried across, so
+   `gpu_hours_spent()` read 0.00, `repro_checklist.md` shipped an empty Runs
+   table and an empty Exact commands section, and the study's training cost was
+   not derivable from anything in the repository. This notebook copies them into
+   `paper_assets/results_raw/<mode>/run_records/` before publishing.
+2. **The prior-tier boxes are verified.** Notebook 03's fault-injection
+   experiment injects the enumeration model's test-split detections. The
+   detector loads only boxes scoring >= 0.5 and, if none do, silently injects
+   nothing and runs the unperturbed model - so all six severities returned
+   bit-identical AP and the experiment appeared to show robustness it never
+   measured. This notebook checks coverage here, where the file is produced.
+3. **Degeneracy is reported.** A model scoring a tenth of the paper cannot
+   support a claim about which component causes the gain, whatever the ordering
+   of the arms. The final cell compares against the paper's Table 1 and says so
+   plainly.
+4. **The optional models are in the plan.** Claims 1, 3 and 4 are marked
+   "cited, untested" only because `DiffusionDet_base_tier2`,
+   `Ours_wo_Manip_Transfer` and the baselines were never trained. Set
+   `TRAIN_FOR_FULL_CLAIM_COVERAGE = True` to include them when the budget allows.
+"""),
+        ("code", PARAMS),
+        ("code", environment_cell(require_gpu=True)),
+        ("code", '''\
+# ---- Inputs, weights, configs (identical to notebook 02) ----
+from src import data_convert, degradations, eval_utils, registration
+
+TRAIN_FOR_FULL_CLAIM_COVERAGE = False   # adds base DiffusionDet + every variant
+
+paths = data_convert.layout()
+for key in ("train_quadrant", "train_enumeration", "train_diagnosis", "val_diagnosis",
+            "test_diagnosis"):
+    assert os.path.exists(paths[key]), (
+        "{} is missing - run notebook 01, or attach the {} dataset"
+        .format(paths[key], DATA_DATASET_SLUG))
+
+IMAGENET_WEIGHTS = train_utils.ensure_swin_weights()
+CFG = {name: os.path.join(setup_env.CONFIGS_REPRO, "diffdet.dentex.{}.yaml".format(name))
+       for name in ("quadrant", "enumeration", "diagnosis", "base_diffusiondet")}
+NOISY_DIR = os.path.join(setup_env.RUNS_DIR, "noisy_boxes")
+os.makedirs(NOISY_DIR, exist_ok=True)
+print("ImageNet Swin-B:", IMAGENET_WEIGHTS)
+print("GPU-hours already recorded on disk: {:.2f}".format(setup_env.gpu_hours_spent()))
+print("full claim coverage:", TRAIN_FOR_FULL_CLAIM_COVERAGE)
+'''),
+        ("code", '''\
+# ---- Does multi-GPU actually work in this Kaggle session? ----
+# Copied from notebook 02, which learned this the expensive way: a probe on the
+# diagnosis stage passed while the real quadrant run died at iteration 2. The
+# probe must exercise the quadrant shape (unsupervised heads, the DDP worst
+# case), and a failure falls back to one GPU instead of poisoning every stage.
+import shutil
+
+ddp = {"requested": NUM_GPUS, "works": None, "error": None}
+probe_dir = os.path.join(setup_env.RUNS_DIR, "ddp_probe")
+if NUM_GPUS > 1 and not os.path.exists(os.path.join(setup_env.RUNS_DIR, ".ddp_ok")):
+    try:
+        train_utils.launch_training(
+            CFG["quadrant"],
+            train_utils.base_overrides(run, probe_dir, 20, IMAGENET_WEIGHTS, NUM_GPUS),
+            registration.training_env("quadrant_train"), probe_dir, NUM_GPUS,
+            resume=False, log_name="ddp_probe.log")
+        ddp["works"] = True
+        open(os.path.join(setup_env.RUNS_DIR, ".ddp_ok"), "w").close()
+    except RuntimeError as error:
+        ddp["works"] = False
+        ddp["error"] = str(error)[-1500:]
+        NUM_GPUS = 1
+        setup_env.log_deviation(
+            "multi-GPU training disabled (DDP failed in this Kaggle session)",
+            "launch(num_gpus=2) failed during the probe; the study runs single-GPU "
+            "rather than fighting a flaky DDP setup", NOTEBOOK_NAME,
+            impact="effective batch size halves relative to a 2-GPU run")
+else:
+    ddp["works"] = "already verified" if NUM_GPUS > 1 else "single GPU"
+shutil.rmtree(probe_dir, ignore_errors=True)
+print(json.dumps(ddp, indent=2), "-> NUM_GPUS =", NUM_GPUS)
+'''),
+        ("code", '''\
+# ---- Pre-flight: a short real run + a real evaluation, on 10 images ----
+# Proves the train -> checkpoint -> evaluate chain end to end BEFORE committing
+# hours of quota to it. 30 iterations cannot detect anything; the assertion is
+# that the pipeline ran, not that it scored.
+PREFLIGHT_ITERS = 30
+smoke = {"skipped": run.is_smoke}
+if not run.is_smoke and not train_utils.is_complete("preflight"):
+    smoke_dir = train_utils.run_dir("preflight")
+    train_utils.launch_training(
+        CFG["diagnosis"],
+        train_utils.base_overrides(run, smoke_dir, PREFLIGHT_ITERS,
+                                   IMAGENET_WEIGHTS, NUM_GPUS),
+        registration.training_env("diagnosis_train"), smoke_dir, NUM_GPUS, resume=False)
+    smoke_weights = os.path.join(smoke_dir, "model_final.pth")
+    assert os.path.exists(smoke_weights), "pre-flight produced no model_final.pth"
+    smoke_eval = eval_utils.evaluate_checkpoint(
+        smoke_weights, CFG["diagnosis"], split="diagnosis_test", tier=2, seed=0, limit=10)
+    assert set(smoke_eval["tiers"]) == {"quadrant", "enumeration", "diagnosis"}
+    smoke = {"weights": smoke_weights,
+             "metrics": {t: p["metrics"] for t, p in smoke_eval["tiers"].items()}}
+    shutil.rmtree(smoke_dir, ignore_errors=True)
+print(json.dumps(smoke, indent=2, default=str))
+'''),
+        ("code", '''\
+# ---- Throughput calibration, then stage 0: quadrant ----
+calibration = None
+if run.quadrant.max_iter is None or run.diagnosis.max_iter is None:
+    calibration = train_utils.calibrate_rate(
+        "swinb_gpu{}".format(NUM_GPUS), CFG["quadrant"], run,
+        "quadrant_train", IMAGENET_WEIGHTS, NUM_GPUS)
+    print(json.dumps(calibration, indent=2))
+
+training_records = []
+quadrant_record = train_utils.train_stage(
+    "quadrant_stage", CFG["quadrant"], run, "quadrant_train",
+    IMAGENET_WEIGHTS, NUM_GPUS, run.quadrant, calibration=calibration)
+quadrant_record["kind"] = "prerequisite"
+training_records.append(quadrant_record)
+QUADRANT_WEIGHTS = train_utils.final_weights("quadrant_stage")
+print("quadrant: {} iters, {} s".format(
+    quadrant_record.get("max_iter"), quadrant_record.get("wall_seconds")))
+'''),
+        ("code", '''\
+# ---- Stage 1: enumeration, seeded by the quadrant model's boxes ----
+enum_boxes = {}
+for key, split in (("NOISY_BOX_TRAIN", "quadrant_enumeration_train"),
+                   ("NOISY_BOX_VAL", "diagnosis_val")):
+    output = os.path.join(NOISY_DIR, "quadrant_over_{}.json".format(split))
+    if not os.path.exists(output):
+        eval_utils.dump_predictions(QUADRANT_WEIGHTS, CFG["quadrant"], split, 0,
+                                    output, seed=0, limit=run.eval_limit)
+    enum_boxes[key] = output
+
+enumeration_record = train_utils.train_stage(
+    "enumeration_stage", CFG["enumeration"], run, "quadrant_enumeration_train",
+    QUADRANT_WEIGHTS, NUM_GPUS, run.enumeration, calibration=calibration,
+    noisy_boxes=enum_boxes)
+enumeration_record["kind"] = "prerequisite"
+training_records.append(enumeration_record)
+ENUM_WEIGHTS = train_utils.final_weights("enumeration_stage")
+print("enumeration: {} iters, {} s".format(
+    enumeration_record.get("max_iter"), enumeration_record.get("wall_seconds")))
+'''),
+        ("code", '''\
+# ---- Enumeration model -> noisy boxes, and the prior-tier check ----
+diagnosis_boxes = {}
+for key, split in (("NOISY_BOX_TRAIN", "diagnosis_train"),
+                   ("NOISY_BOX_VAL", "diagnosis_val")):
+    output = os.path.join(NOISY_DIR, "enumeration_over_{}.json".format(split))
+    if not os.path.exists(output):
+        eval_utils.dump_predictions(ENUM_WEIGHTS, CFG["enumeration"], split, 1,
+                                    output, seed=0, limit=run.eval_limit)
+    diagnosis_boxes[key] = output
+
+prior_test = os.path.join(NOISY_DIR, "enumeration_over_diagnosis_test.json")
+if not os.path.exists(prior_test):
+    eval_utils.dump_predictions(ENUM_WEIGHTS, CFG["enumeration"], "diagnosis_test", 1,
+                                prior_test, seed=0, limit=run.eval_limit)
+
+# The check that was missing. Notebook 03 injects these boxes to measure how
+# sensitive the diagnosis tier is to an imperfect prior tier; the detector keeps
+# only boxes scoring >= 0.5 and injects nothing at all if none qualify, in which
+# case every severity silently evaluates the unperturbed model and the sweep
+# reports six identical numbers. Catch it here, while the enumeration model is
+# still the thing under discussion.
+coverage = eval_utils.prior_box_coverage(prior_test)
+print(json.dumps(coverage, indent=2))
+if not coverage["boxes_kept"]:
+    setup_env.log_deviation(
+        "hierarchy fault injection unavailable: no prior-tier box scored >= 0.5",
+        "the enumeration model produced {} test-split detections, none above the "
+        "injection threshold, so inference-time injection is a no-op and the "
+        "sweep cannot measure prior-tier sensitivity"
+        .format(coverage["boxes_total"]), NOTEBOOK_NAME,
+        impact="notebook 03 skips the fault-injection experiment instead of "
+               "reporting the unperturbed model as its result")
+    print("\\nWARNING: fault injection will be SKIPPED downstream.")
+box_stats = {key: degradations.summarize_prediction_file(path)
+             for key, path in diagnosis_boxes.items()}
+print(json.dumps(box_stats, indent=2))
+'''),
+        ("code", '''\
+# ---- Stage 2: the diagnosis variants, at identical budgets ----
+# Built directly from the switch table rather than through variant_plan():
+# variant_plan expands run.variants only, and wo_manip_transfer is not in
+# micro's list -- filtering its output could therefore never ADD the variant
+# that full claim coverage exists to add.
+variants = setup_env.ALL_VARIANTS if TRAIN_FOR_FULL_CLAIM_COVERAGE else run.variants
+plans = []
+for variant in variants:
+    switches = setup_env.VARIANT_SWITCHES[variant]
+    plans.append({
+        "variant": variant,
+        "label": setup_env.VARIANT_LABELS[variant],
+        "run_name": "diagnosis_{}".format(variant),
+        "weights": ENUM_WEIGHTS if switches["transfer"] else IMAGENET_WEIGHTS,
+        "noisy_boxes": diagnosis_boxes if switches["manipulation"] else None,
+        "switches": switches,
+    })
+variant_records = []
+for plan in plans:
+    print("\\n" + "=" * 72)
+    print("{}  (transfer={}, manipulation={})".format(
+        plan["variant"], plan["switches"]["transfer"], plan["switches"]["manipulation"]))
+    print("=" * 72)
+    record = train_utils.train_stage(
+        plan["run_name"], CFG["diagnosis"], run, "diagnosis_train",
+        plan["weights"], NUM_GPUS, run.diagnosis, calibration=calibration,
+        noisy_boxes=plan["noisy_boxes"],
+        trajectory_fractions=run.trajectory_fractions)
+    record.update({"variant": plan["variant"], "label": plan["label"],
+                   "switches": plan["switches"], "kind": "diagnosis_variant"})
+    variant_records.append(record)
+    training_records.append(record)
+
+# Different wall time between variants is fine; different iteration counts,
+# seeds or batch sizes are not - that measures the budget, not the switch.
+matched = train_utils.assert_matched_budgets(variant_records)
+print("\\n" + json.dumps(matched, indent=2, default=str))
+'''),
+        ("code", '''\
+# ---- Base DiffusionDet, which claim 1 needs ----
+TIER_CLASSES = {0: 4, 1: 8, 2: 4}
+TIER_SPLIT = {0: "quadrant_train", 1: "quadrant_enumeration_train", 2: "diagnosis_train"}
+base_tiers = (2,) if TRAIN_FOR_FULL_CLAIM_COVERAGE else run.base_tiers
+base_records = []
+for tier in base_tiers:
+    flat_train = data_convert.flat_json_path(tier, "train")
+    assert os.path.exists(flat_train), "run notebook 01 first: {}".format(flat_train)
+    print("\\n=== base_diffusiondet_tier{} ===".format(tier))
+    record = train_utils.train_stage(
+        "base_diffusiondet_tier{}".format(tier), CFG["base_diffusiondet"], run,
+        TIER_SPLIT[tier], IMAGENET_WEIGHTS, NUM_GPUS, run.base_diffusiondet,
+        extra_overrides=["MODEL.DiffusionDet.NUM_CLASSES",
+                         "[{}, 8, 4]".format(TIER_CLASSES[tier])],
+        env_override={"TRAIN_JSON": flat_train,
+                      "VAL_JSON": data_convert.flat_json_path(tier, "test"),
+                      "VAL_IMG_DIR": paths["img_test"], "TIER": "0"})
+    record.update({"tier": tier, "flat_train_json": flat_train,
+                   "kind": "base_diffusiondet"})
+    base_records.append(record)
+    training_records.append(record)
+if not base_tiers:
+    print("base DiffusionDet skipped; claim 1 stays 'cited, untested'")
+'''),
+        ("code", '''\
+# ---- Retain the run records (the gap this notebook exists to close) ----
+# runs/<mode>/<stage>/run_record.json is where the training cost lives.
+# setup_env.gpu_hours_spent() walks exactly these files, and the checklist's
+# Runs table and Exact commands come from them. Left in the session they vanish
+# with it, and the study's compute becomes unverifiable - which is what
+# happened: scope_and_claims.md reported 0.00 GPU-hours against a real spend.
+import shutil
+
+RECORDS_DIR = os.path.join(setup_env.RESULTS_RAW, "run_records")
+os.makedirs(RECORDS_DIR, exist_ok=True)
+retained = []
+for root, _dirs, files in os.walk(setup_env.RUNS_ROOT):
+    if "run_record.json" not in files:
+        continue
+    stage = os.path.basename(root)
+    destination = os.path.join(RECORDS_DIR, "{}.json".format(stage))
+    shutil.copy2(os.path.join(root, "run_record.json"), destination)
+    retained.append(os.path.relpath(destination, setup_env.PAPER_ASSETS))
+print("retained {} run record(s):".format(len(retained)))
+for item in sorted(retained):
+    print(" ", item)
+print("\\nGPU-hours these records account for: {:.2f}".format(
+    setup_env.gpu_hours_spent()))
+'''),
+        ("code", '''\
+# ---- Is this run strong enough to support a claim? ----
+# An ablation ordering reproduced at a tenth of the paper's accuracy is not
+# evidence about the mechanism: undertraining reproduces orderings too. The
+# claim-coverage matrix downgrades below this floor, so state it here, next to
+# the run that decides it.
+from src import tables
+
+DEGENERATE_AP = 10.0
+reference = tables.reference_lookup()["diagnosis"]
+verdict = {}
+for record in variant_records:
+    weights = train_utils.final_weights(record["name"])
+    result = eval_utils.evaluate_checkpoint(
+        weights, CFG["diagnosis"], split="diagnosis_test", tier=2, seed=0,
+        limit=run.eval_limit)
+    measured = result["tiers"]["diagnosis"]["metrics"].get("AP")
+    expected = (reference.get(record["label"], {}) or {}).get("AP")
+    verdict[record["label"]] = {
+        "AP": measured, "paper_AP": expected,
+        "fraction_of_paper": (measured / expected) if (measured and expected) else None,
+        "degenerate": measured is not None and measured < DEGENERATE_AP,
+    }
+    print("{:26s} AP {:6.2f}   paper {:5.1f}   {}".format(
+        record["label"], measured or 0.0, expected or 0.0,
+        "DEGENERATE" if verdict[record["label"]]["degenerate"] else "ok"))
+if any(v["degenerate"] for v in verdict.values()):
+    print("\\nAt least one arm is below AP {:.0f}. The ablation ordering cannot be "
+          "separated from undertraining, and scope_and_claims.md will mark the "
+          "manipulation claim 'undertrained, not conclusive'. Raise RUN_MODE or "
+          "the iteration budget before treating this as a reproduction."
+          .format(DEGENERATE_AP))
+'''),
+        ("code", summary_cell("04_final_training_run", '''\
+summary = {
+    "run_mode": run.mode,
+    "num_gpus": NUM_GPUS,
+    "multi_gpu": ddp,
+    "preflight": smoke,
+    "calibration": calibration,
+    "records": training_records,
+    "variants_trained": [r["variant"] for r in variant_records],
+    "matched_budgets": matched,
+    "full_claim_coverage": TRAIN_FOR_FULL_CLAIM_COVERAGE,
+    "weights": {
+        "imagenet": IMAGENET_WEIGHTS,
+        "quadrant": QUADRANT_WEIGHTS,
+        "enumeration": ENUM_WEIGHTS,
+        "variants": {r["variant"]: train_utils.final_weights(r["name"])
+                     for r in variant_records},
+        "base": {str(r["tier"]): train_utils.final_weights(r["name"])
+                 for r in base_records},
+    },
+    "noisy_boxes": {"for_enumeration": enum_boxes, "for_diagnosis": diagnosis_boxes,
+                    "prior_over_test": prior_test, "stats": box_stats},
+    "prior_box_coverage": coverage,
+    "trajectory_checkpoints": {r["variant"]: r.get("trajectory", {})
+                               for r in variant_records},
+    "degeneracy": verdict,
+    "retained_run_records": sorted(retained),
+    "gpu_hours_spent": setup_env.gpu_hours_spent(),
+}
+''')),
+        ("code", '''\
+# ---- Publish, last ----
+# paper_assets is included so the retained run records and this summary travel
+# with the checkpoints; notebook 03 reads both.
+publish = {"status": "disabled"}
+if PUBLISH_KAGGLE_DATASET:
+    publish = train_utils.publish_kaggle_dataset(
+        CKPT_DATASET_SLUG, [setup_env.RUNS_DIR, setup_env.PAPER_ASSETS],
+        "final training run ({} mode)".format(run.mode))
+    summary["kaggle_publish"] = {k: v for k, v in publish.items()
+                                 if k not in ("stdout", "stderr")}
+    setup_env.write_notebook_summary("04_final_training_run", summary)
+print(json.dumps({k: v for k, v in publish.items() if k not in ("stdout", "stderr")},
+                 indent=2))
+print("\\nGPU-hours recorded: {:.2f}".format(setup_env.gpu_hours_spent()))
+print("Attach to notebook 03 as: {} (plus {})".format(
+    CKPT_DATASET_SLUG, DATA_DATASET_SLUG))
+'''),
+    ]
+
+
 def notebook_opt():
     return [
         ("md", """\
@@ -1735,6 +2310,7 @@ NOTEBOOKS = {
     "01_setup_and_data": notebook_01,
     "02_train_all": notebook_02,
     "03_evaluate_and_build_assets": notebook_03,
+    "04_final_training_run": notebook_04,
     "opt_baselines_and_simmim": notebook_opt,
 }
 

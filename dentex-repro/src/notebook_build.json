@@ -1,6 +1,7 @@
 {
   "01_setup_and_data": "30751af742e5",
   "02_train_all": "1e4eb4c1f8dd",
-  "03_evaluate_and_build_assets": "5e3ae499dcd5",
+  "03_evaluate_and_build_assets": "c86cdad39283",
+  "04_final_training_run": "34a8fca45bb0",
   "opt_baselines_and_simmim": "cf4eef045425"
 }

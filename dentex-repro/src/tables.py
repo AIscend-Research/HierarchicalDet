@@ -173,6 +173,7 @@ def record_not_run(asset_class: str, notebook: str, run_mode: str, reason: str) 
     with open(placeholder, "w") as handle:
         handle.write("{} was not produced in RUN_MODE={}.\nReason: {}\n".format(
             asset_class, run_mode, reason))
+    manifest.drop_missing(asset_class)
     manifest.record_asset(placeholder, asset_class, notebook, run_mode,
                           status="not run", note=reason)
 
@@ -424,12 +425,17 @@ PAPER_CLAIMS = (
         "claim": "The approach is robust enough for panoramic X-ray analysis in practice.",
         "default_status": "extended beyond the paper",
         "evidence": "notebook 06: degradation grid, clean/stress subsets and hierarchy "
-                    "fault injection — none of which the original paper tests",
+                    "fault injection - none of which the original paper tests",
+        # Cited evidence that must actually exist. A claim whose supporting
+        # figure was recorded "not run" is not supported by it, and saying so
+        # here is cheaper than hoping a reader cross-checks the manifest.
+        "requires_assets": ["figure:degradation", "figure:fault_injection"],
     },
     {
         "claim": "Diffusion sampling steps trade accuracy against latency.",
         "default_status": "extended beyond the paper",
         "evidence": "notebook 06 step sweep with both axes measured",
+        "requires_assets": ["figure:ap_vs_steps"],
     },
 )
 
