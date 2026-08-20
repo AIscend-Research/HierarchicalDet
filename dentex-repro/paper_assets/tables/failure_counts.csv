@@ -1,0 +1,6 @@
+method,images,detections,images_with_no_detections,degenerate_box,box_out_of_image,box_covers_whole_image,extreme_aspect_ratio,crashes
+Ours_full,250,61876,0,111,0,0,185,0
+Ours_wo_Manipulation,250,54986,0,36,0,0,64,0
+Ours_wo_Transfer,250,225380,0,250,0,0,0,0
+Stage_enumeration,250,74712,0,244,0,0,223,0
+Stage_quadrant,250,15597,0,250,0,0,0,0

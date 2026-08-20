@@ -1,0 +1,1 @@
+Diagnosis-tier AP under Gaussian blur, JPEG recompression and downscaling, one panel per corruption because the severities are different quantities in different units. Dotted line is the clean baseline (AP=4.8787).

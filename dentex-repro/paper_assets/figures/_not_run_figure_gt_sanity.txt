@@ -1,0 +1,2 @@
+figure:gt_sanity was not produced in RUN_MODE=micro.
+Reason: the manifest cited this asset but the file is not in this repository (paper_assets/figures/gt_sanity_check.pdf, paper_assets/figures/gt_sanity_check.png). It was produced by a session whose output was not carried across.

@@ -1,0 +1,1 @@
+Per-class AP at the enumeration tier. OUR EXTENSION: the original paper reports tier-level aggregates only.

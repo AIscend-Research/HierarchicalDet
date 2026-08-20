@@ -1,0 +1,2 @@
+figure:fault_injection was not produced in RUN_MODE=micro.
+Reason: all 6 fault conditions returned identical per-seed AP values, so the prior-tier perturbation was not applied (the detector injects nothing when no prior box clears the score threshold). The experiment did not test what it claims to test.

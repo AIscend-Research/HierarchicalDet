@@ -1,0 +1,485 @@
+{
+  "seeds": [
+    0,
+    1
+  ],
+  "runs": [
+    {
+      "weights": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/diagnosis_full/model_final.pth",
+      "weights_sha256": "7d95d9fe9e83a64e95179ba12d49bda62cdafcc86cc4ee89fdfe9c54a436b827",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "config_hash": "7a00fa67ada142ab",
+      "split": "diagnosis_test",
+      "annotations": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+      "image_dir": "/kaggle/working/runs/micro/degraded/blur_sigma4",
+      "tier": 2,
+      "inference_seed": 0,
+      "determinism": {
+        "seed": 0,
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "remaining_nondeterminism": [
+          "atomics in torchvision ROIAlign / NMS CUDA kernels"
+        ]
+      },
+      "sample_step": 1,
+      "num_proposals": 1000,
+      "device": "cuda",
+      "limit": null,
+      "wall_seconds": 130.94,
+      "noisy_box_infer": null,
+      "noisy_box_infer_jitter": null,
+      "noisy_box_infer_drop": null,
+      "tiers": {
+        "quadrant": {
+          "metrics": {
+            "AP": 2.011168232148314,
+            "AP50": 7.061024910438977,
+            "AP75": 0.31285907902897675,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 2.0935850653167893,
+            "AR": 0.23151109383136417
+          },
+          "per_class_AP": {
+            "1Quadrant": 3.733385976527041,
+            "2Quadrant": 0.03767722135334373,
+            "3Quadrant": 2.0396484227420015,
+            "4Quadrant": 2.2339613079708682
+          },
+          "recall_detail": {
+            "AR1": 0.041168659759163596,
+            "AR10": 0.1530465082236799,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.23151109383136417
+          },
+          "num_predictions": 62102,
+          "raw": {
+            "AP_Quadrant": 2.011168232148314,
+            "AP50_Quadrant": 7.061024910438977,
+            "AP75_Quadrant": 0.31285907902897675,
+            "APs_Quadrant": NaN,
+            "APm_Quadrant": NaN,
+            "APl_Quadrant": 2.0935850653167893,
+            "AP-1Quadrant": 3.733385976527041,
+            "AP-2Quadrant": 0.03767722135334373,
+            "AP-3Quadrant": 2.0396484227420015,
+            "AP-4Quadrant": 2.2339613079708682
+          }
+        },
+        "enumeration": {
+          "metrics": {
+            "AP": 1.6314581844467995,
+            "AP50": 5.831968276269178,
+            "AP75": 0.2455061215593068,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 1.7306272450559073,
+            "AR": 0.16383681292697078
+          },
+          "per_class_AP": {
+            "1Enumeration": 0.0,
+            "2Enumeration": 0.0,
+            "3Enumeration": 0.0,
+            "4Enumeration": 0.12283052838282778,
+            "5Enumeration": 0.0,
+            "6Enumeration": 2.938028026402558,
+            "7Enumeration": 1.707385600968124,
+            "8Enumeration": 8.283421319820887
+          },
+          "recall_detail": {
+            "AR1": 0.022868598451073998,
+            "AR10": 0.0951177597406618,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.16383681292697078
+          },
+          "num_predictions": 62102,
+          "raw": {
+            "AP_Enumeration": 1.6314581844467995,
+            "AP50_Enumeration": 5.831968276269178,
+            "AP75_Enumeration": 0.2455061215593068,
+            "APs_Enumeration": NaN,
+            "APm_Enumeration": NaN,
+            "APl_Enumeration": 1.7306272450559073,
+            "AP-1Enumeration": 0.0,
+            "AP-2Enumeration": 0.0,
+            "AP-3Enumeration": 0.0,
+            "AP-4Enumeration": 0.12283052838282778,
+            "AP-5Enumeration": 0.0,
+            "AP-6Enumeration": 2.938028026402558,
+            "AP-7Enumeration": 1.707385600968124,
+            "AP-8Enumeration": 8.283421319820887
+          }
+        },
+        "diagnosis": {
+          "metrics": {
+            "AP": 4.503171684000036,
+            "AP50": 15.87810080269007,
+            "AP75": 0.6322178562960095,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 4.793316462477916,
+            "AR": 0.26340031619691434
+          },
+          "per_class_AP": {
+            "ImpactedDisease": 9.740208285029473,
+            "CariesDisease": 3.623588627986838,
+            "Periapical LesionDisease": 0.1457181389838006,
+            "Deep CariesDisease": NaN
+          },
+          "recall_detail": {
+            "AR1": 0.04388934319480032,
+            "AR10": 0.17856926347925642,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.26340031619691434
+          },
+          "num_predictions": 62102,
+          "raw": {
+            "AP_Disease": 4.503171684000036,
+            "AP50_Disease": 15.87810080269007,
+            "AP75_Disease": 0.6322178562960095,
+            "APs_Disease": NaN,
+            "APm_Disease": NaN,
+            "APl_Disease": 4.793316462477916,
+            "AP-ImpactedDisease": 9.740208285029473,
+            "AP-CariesDisease": 3.623588627986838,
+            "AP-Periapical LesionDisease": 0.1457181389838006,
+            "AP-Deep CariesDisease": NaN
+          }
+        }
+      },
+      "peak_gpu_memory_mb": 1196.7
+    },
+    {
+      "weights": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/diagnosis_full/model_final.pth",
+      "weights_sha256": "7d95d9fe9e83a64e95179ba12d49bda62cdafcc86cc4ee89fdfe9c54a436b827",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "config_hash": "7a00fa67ada142ab",
+      "split": "diagnosis_test",
+      "annotations": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+      "image_dir": "/kaggle/working/runs/micro/degraded/blur_sigma4",
+      "tier": 2,
+      "inference_seed": 1,
+      "determinism": {
+        "seed": 1,
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "remaining_nondeterminism": [
+          "atomics in torchvision ROIAlign / NMS CUDA kernels"
+        ]
+      },
+      "sample_step": 1,
+      "num_proposals": 1000,
+      "device": "cuda",
+      "limit": null,
+      "wall_seconds": 130.07,
+      "noisy_box_infer": null,
+      "noisy_box_infer_jitter": null,
+      "noisy_box_infer_drop": null,
+      "tiers": {
+        "quadrant": {
+          "metrics": {
+            "AP": 2.2308215916420666,
+            "AP50": 8.05851936678364,
+            "AP75": 0.3570341274300975,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 2.3399291045414166,
+            "AR": 0.23755834776248594
+          },
+          "per_class_AP": {
+            "1Quadrant": 4.088167611183828,
+            "2Quadrant": 0.031216479502643876,
+            "3Quadrant": 1.747806641241275,
+            "4Quadrant": 3.05609563464052
+          },
+          "recall_detail": {
+            "AR1": 0.04315804292594889,
+            "AR10": 0.15811138494321525,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.23755834776248594
+          },
+          "num_predictions": 62410,
+          "raw": {
+            "AP_Quadrant": 2.2308215916420666,
+            "AP50_Quadrant": 8.05851936678364,
+            "AP75_Quadrant": 0.3570341274300975,
+            "APs_Quadrant": NaN,
+            "APm_Quadrant": NaN,
+            "APl_Quadrant": 2.3399291045414166,
+            "AP-1Quadrant": 4.088167611183828,
+            "AP-2Quadrant": 0.031216479502643876,
+            "AP-3Quadrant": 1.747806641241275,
+            "AP-4Quadrant": 3.05609563464052
+          }
+        },
+        "enumeration": {
+          "metrics": {
+            "AP": 1.5756260046967285,
+            "AP50": 5.5263540561483175,
+            "AP75": 0.22861874170536453,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 1.6979388436654723,
+            "AR": 0.16791191970560632
+          },
+          "per_class_AP": {
+            "1Enumeration": 0.0,
+            "2Enumeration": 0.0,
+            "3Enumeration": 0.0,
+            "4Enumeration": 0.18789411835381667,
+            "5Enumeration": 0.0,
+            "6Enumeration": 3.5976902038554393,
+            "7Enumeration": 1.9097699795801404,
+            "8Enumeration": 6.909653735784434
+          },
+          "recall_detail": {
+            "AR1": 0.025791130921421008,
+            "AR10": 0.09643735230448132,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.16791191970560632
+          },
+          "num_predictions": 62410,
+          "raw": {
+            "AP_Enumeration": 1.5756260046967285,
+            "AP50_Enumeration": 5.5263540561483175,
+            "AP75_Enumeration": 0.22861874170536453,
+            "APs_Enumeration": NaN,
+            "APm_Enumeration": NaN,
+            "APl_Enumeration": 1.6979388436654723,
+            "AP-1Enumeration": 0.0,
+            "AP-2Enumeration": 0.0,
+            "AP-3Enumeration": 0.0,
+            "AP-4Enumeration": 0.18789411835381667,
+            "AP-5Enumeration": 0.0,
+            "AP-6Enumeration": 3.5976902038554393,
+            "AP-7Enumeration": 1.9097699795801404,
+            "AP-8Enumeration": 6.909653735784434
+          }
+        },
+        "diagnosis": {
+          "metrics": {
+            "AP": 3.9883398146943345,
+            "AP50": 13.949016862538077,
+            "AP75": 0.5973395115176184,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 4.363239174853133,
+            "AR": 0.27099350847331005
+          },
+          "per_class_AP": {
+            "ImpactedDisease": 7.977627938705134,
+            "CariesDisease": 3.859178894139482,
+            "Periapical LesionDisease": 0.1282126112383874,
+            "Deep CariesDisease": NaN
+          },
+          "recall_detail": {
+            "AR1": 0.04548779734321903,
+            "AR10": 0.18744566602256185,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.27099350847331005
+          },
+          "num_predictions": 62410,
+          "raw": {
+            "AP_Disease": 3.9883398146943345,
+            "AP50_Disease": 13.949016862538077,
+            "AP75_Disease": 0.5973395115176184,
+            "APs_Disease": NaN,
+            "APm_Disease": NaN,
+            "APl_Disease": 4.363239174853133,
+            "AP-ImpactedDisease": 7.977627938705134,
+            "AP-CariesDisease": 3.859178894139482,
+            "AP-Periapical LesionDisease": 0.1282126112383874,
+            "AP-Deep CariesDisease": NaN
+          }
+        }
+      },
+      "peak_gpu_memory_mb": 1196.7
+    }
+  ],
+  "aggregate": {
+    "quadrant": {
+      "AR": {
+        "mean": 0.2345,
+        "std": 0.0043,
+        "n": 2,
+        "values": [
+          0.2315,
+          0.2376
+        ]
+      },
+      "AP": {
+        "mean": 2.121,
+        "std": 0.1553,
+        "n": 2,
+        "values": [
+          2.0112,
+          2.2308
+        ]
+      },
+      "AP50": {
+        "mean": 7.5598,
+        "std": 0.7053,
+        "n": 2,
+        "values": [
+          7.061,
+          8.0585
+        ]
+      },
+      "AP75": {
+        "mean": 0.3349,
+        "std": 0.0312,
+        "n": 2,
+        "values": [
+          0.3129,
+          0.357
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 2.2168,
+        "std": 0.1742,
+        "n": 2,
+        "values": [
+          2.0936,
+          2.3399
+        ]
+      }
+    },
+    "enumeration": {
+      "AR": {
+        "mean": 0.1659,
+        "std": 0.0029,
+        "n": 2,
+        "values": [
+          0.1638,
+          0.1679
+        ]
+      },
+      "AP": {
+        "mean": 1.6035,
+        "std": 0.0395,
+        "n": 2,
+        "values": [
+          1.6315,
+          1.5756
+        ]
+      },
+      "AP50": {
+        "mean": 5.6792,
+        "std": 0.2161,
+        "n": 2,
+        "values": [
+          5.832,
+          5.5264
+        ]
+      },
+      "AP75": {
+        "mean": 0.2371,
+        "std": 0.0119,
+        "n": 2,
+        "values": [
+          0.2455,
+          0.2286
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 1.7143,
+        "std": 0.0231,
+        "n": 2,
+        "values": [
+          1.7306,
+          1.6979
+        ]
+      }
+    },
+    "diagnosis": {
+      "AR": {
+        "mean": 0.2672,
+        "std": 0.0054,
+        "n": 2,
+        "values": [
+          0.2634,
+          0.271
+        ]
+      },
+      "AP": {
+        "mean": 4.2458,
+        "std": 0.364,
+        "n": 2,
+        "values": [
+          4.5032,
+          3.9883
+        ]
+      },
+      "AP50": {
+        "mean": 14.9136,
+        "std": 1.3641,
+        "n": 2,
+        "values": [
+          15.8781,
+          13.949
+        ]
+      },
+      "AP75": {
+        "mean": 0.6148,
+        "std": 0.0247,
+        "n": 2,
+        "values": [
+          0.6322,
+          0.5973
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 4.5783,
+        "std": 0.3041,
+        "n": 2,
+        "values": [
+          4.7933,
+          4.3632
+        ]
+      }
+    }
+  },
+  "condition": {
+    "kind": "blur",
+    "severity": 4.0,
+    "label": "blur_sigma4",
+    "pretty": "Gaussian blur \u03c3=4"
+  }
+}

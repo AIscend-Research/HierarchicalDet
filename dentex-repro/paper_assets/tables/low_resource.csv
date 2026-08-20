@@ -1,0 +1,2 @@
+method,device,sample_step,seconds_per_image,images_per_minute,peak_gpu_memory_mb,parameters_millions,checkpoint_mb,images
+Ours_full,cuda,4,0.850,70.59,1196.70,173.44,662.10,250

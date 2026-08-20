@@ -1,0 +1,1 @@
+Per-tier AP against training progress for each diagnosis variant. Stable ordering across checkpoints is evidence the ablation conclusion is not an artifact of the shortened schedule; unstable ordering is itself a finding.

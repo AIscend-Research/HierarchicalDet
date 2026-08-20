@@ -1,0 +1,81 @@
+method,tier,class,AP_mean,n_seeds,note
+Ours_full,quadrant,1Quadrant,4.660,3,OUR EXTENSION — not reported in the original paper
+Ours_full,quadrant,2Quadrant,0.170,3,OUR EXTENSION — not reported in the original paper
+Ours_full,quadrant,3Quadrant,2.460,3,OUR EXTENSION — not reported in the original paper
+Ours_full,quadrant,4Quadrant,3.330,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,1Enumeration,0.020,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,2Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,3Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,4Enumeration,0.120,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,5Enumeration,0.010,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,6Enumeration,3.390,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,7Enumeration,1.880,3,OUR EXTENSION — not reported in the original paper
+Ours_full,enumeration,8Enumeration,9.200,3,OUR EXTENSION — not reported in the original paper
+Ours_full,diagnosis,CariesDisease,3.620,3,OUR EXTENSION — not reported in the original paper
+Ours_full,diagnosis,Deep CariesDisease,n/a,3,OUR EXTENSION — not reported in the original paper
+Ours_full,diagnosis,ImpactedDisease,11.12,3,OUR EXTENSION — not reported in the original paper
+Ours_full,diagnosis,Periapical LesionDisease,0.170,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,quadrant,1Quadrant,1.060,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,quadrant,2Quadrant,0.220,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,quadrant,3Quadrant,0.030,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,quadrant,4Quadrant,3.900,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,1Enumeration,0.080,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,2Enumeration,0.010,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,3Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,4Enumeration,0.040,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,5Enumeration,0.070,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,6Enumeration,5.220,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,7Enumeration,2.420,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,enumeration,8Enumeration,3.160,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,diagnosis,CariesDisease,4.790,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,diagnosis,Deep CariesDisease,n/a,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,diagnosis,ImpactedDisease,3.360,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Manipulation,diagnosis,Periapical LesionDisease,0.190,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,quadrant,1Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,quadrant,2Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,quadrant,3Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,quadrant,4Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,1Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,2Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,3Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,4Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,5Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,6Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,7Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,enumeration,8Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,diagnosis,CariesDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,diagnosis,Deep CariesDisease,n/a,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,diagnosis,ImpactedDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Ours_wo_Transfer,diagnosis,Periapical LesionDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,quadrant,1Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,quadrant,2Quadrant,0.070,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,quadrant,3Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,quadrant,4Quadrant,0.080,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,1Enumeration,0.050,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,2Enumeration,0.030,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,3Enumeration,0.010,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,4Enumeration,0.010,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,5Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,6Enumeration,0.120,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,7Enumeration,0.020,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,enumeration,8Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,diagnosis,CariesDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,diagnosis,Deep CariesDisease,n/a,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,diagnosis,ImpactedDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_enumeration,diagnosis,Periapical LesionDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,quadrant,1Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,quadrant,2Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,quadrant,3Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,quadrant,4Quadrant,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,1Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,2Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,3Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,4Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,5Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,6Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,7Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,enumeration,8Enumeration,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,diagnosis,CariesDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,diagnosis,Deep CariesDisease,n/a,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,diagnosis,ImpactedDisease,0.000,3,OUR EXTENSION — not reported in the original paper
+Stage_quadrant,diagnosis,Periapical LesionDisease,0.000,3,OUR EXTENSION — not reported in the original paper

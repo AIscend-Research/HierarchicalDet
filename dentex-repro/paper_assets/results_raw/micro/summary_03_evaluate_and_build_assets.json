@@ -1,0 +1,1081 @@
+{
+  "run_mode": "micro",
+  "had_gpu": true,
+  "eval_seeds": [
+    0,
+    1,
+    2
+  ],
+  "models_evaluated": [
+    "Ours_full",
+    "Ours_wo_Manipulation",
+    "Ours_wo_Transfer",
+    "Stage_enumeration",
+    "Stage_quadrant"
+  ],
+  "aggregate": {
+    "Ours_full": {
+      "quadrant": {
+        "AR": {
+          "mean": 0.257,
+          "std": 0.0043,
+          "n": 3,
+          "values": [
+            0.2525,
+            0.2574,
+            0.2611
+          ]
+        },
+        "AP": {
+          "mean": 2.6538,
+          "std": 0.0652,
+          "n": 3,
+          "values": [
+            2.5802,
+            2.6771,
+            2.7042
+          ]
+        },
+        "AP50": {
+          "mean": 9.7415,
+          "std": 0.4904,
+          "n": 3,
+          "values": [
+            9.1756,
+            10.0443,
+            10.0045
+          ]
+        },
+        "AP75": {
+          "mean": 0.5518,
+          "std": 0.0913,
+          "n": 3,
+          "values": [
+            0.6549,
+            0.5189,
+            0.4815
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 2.7245,
+          "std": 0.0669,
+          "n": 3,
+          "values": [
+            2.6474,
+            2.7679,
+            2.7582
+          ]
+        }
+      },
+      "enumeration": {
+        "AR": {
+          "mean": 0.1621,
+          "std": 0.0028,
+          "n": 3,
+          "values": [
+            0.1644,
+            0.1589,
+            0.1629
+          ]
+        },
+        "AP": {
+          "mean": 1.8286,
+          "std": 0.0464,
+          "n": 3,
+          "values": [
+            1.7995,
+            1.8043,
+            1.8821
+          ]
+        },
+        "AP50": {
+          "mean": 6.5716,
+          "std": 0.2876,
+          "n": 3,
+          "values": [
+            6.6602,
+            6.2501,
+            6.8045
+          ]
+        },
+        "AP75": {
+          "mean": 0.3943,
+          "std": 0.0956,
+          "n": 3,
+          "values": [
+            0.4209,
+            0.4737,
+            0.2882
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 1.9195,
+          "std": 0.0354,
+          "n": 3,
+          "values": [
+            1.8791,
+            1.9343,
+            1.9451
+          ]
+        }
+      },
+      "diagnosis": {
+        "AR": {
+          "mean": 0.2655,
+          "std": 0.0018,
+          "n": 3,
+          "values": [
+            0.2645,
+            0.2675,
+            0.2644
+          ]
+        },
+        "AP": {
+          "mean": 4.9695,
+          "std": 0.16,
+          "n": 3,
+          "values": [
+            4.8491,
+            4.9083,
+            5.1512
+          ]
+        },
+        "AP50": {
+          "mean": 18.0912,
+          "std": 0.8914,
+          "n": 3,
+          "values": [
+            18.213,
+            17.1453,
+            18.9155
+          ]
+        },
+        "AP75": {
+          "mean": 1.0217,
+          "std": 0.2602,
+          "n": 3,
+          "values": [
+            1.0914,
+            1.24,
+            0.7338
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 5.2338,
+          "std": 0.1551,
+          "n": 3,
+          "values": [
+            5.0548,
+            5.3274,
+            5.3194
+          ]
+        }
+      }
+    },
+    "Ours_wo_Manipulation": {
+      "quadrant": {
+        "AR": {
+          "mean": 0.1928,
+          "std": 0.0045,
+          "n": 3,
+          "values": [
+            0.1876,
+            0.1961,
+            0.1947
+          ]
+        },
+        "AP": {
+          "mean": 1.3032,
+          "std": 0.0178,
+          "n": 3,
+          "values": [
+            1.2943,
+            1.3236,
+            1.2915
+          ]
+        },
+        "AP50": {
+          "mean": 5.15,
+          "std": 0.1861,
+          "n": 3,
+          "values": [
+            5.2977,
+            5.2113,
+            4.9411
+          ]
+        },
+        "AP75": {
+          "mean": 0.2106,
+          "std": 0.0258,
+          "n": 3,
+          "values": [
+            0.1813,
+            0.2298,
+            0.2208
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 1.3315,
+          "std": 0.0227,
+          "n": 3,
+          "values": [
+            1.3163,
+            1.3575,
+            1.3205
+          ]
+        }
+      },
+      "enumeration": {
+        "AR": {
+          "mean": 0.1507,
+          "std": 0.0036,
+          "n": 3,
+          "values": [
+            0.1497,
+            0.1546,
+            0.1477
+          ]
+        },
+        "AP": {
+          "mean": 1.3749,
+          "std": 0.0199,
+          "n": 3,
+          "values": [
+            1.3973,
+            1.3683,
+            1.3592
+          ]
+        },
+        "AP50": {
+          "mean": 5.3106,
+          "std": 0.187,
+          "n": 3,
+          "values": [
+            5.5264,
+            5.2079,
+            5.1974
+          ]
+        },
+        "AP75": {
+          "mean": 0.2308,
+          "std": 0.0519,
+          "n": 3,
+          "values": [
+            0.2906,
+            0.1979,
+            0.2037
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 1.3964,
+          "std": 0.018,
+          "n": 3,
+          "values": [
+            1.4157,
+            1.3935,
+            1.38
+          ]
+        }
+      },
+      "diagnosis": {
+        "AR": {
+          "mean": 0.2261,
+          "std": 0.0108,
+          "n": 3,
+          "values": [
+            0.2143,
+            0.2356,
+            0.2282
+          ]
+        },
+        "AP": {
+          "mean": 2.7802,
+          "std": 0.2749,
+          "n": 3,
+          "values": [
+            2.5254,
+            3.0715,
+            2.7437
+          ]
+        },
+        "AP50": {
+          "mean": 11.4428,
+          "std": 0.4605,
+          "n": 3,
+          "values": [
+            11.0179,
+            11.9321,
+            11.3783
+          ]
+        },
+        "AP75": {
+          "mean": 0.4624,
+          "std": 0.1975,
+          "n": 3,
+          "values": [
+            0.5173,
+            0.6267,
+            0.2433
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 2.8247,
+          "std": 0.2861,
+          "n": 3,
+          "values": [
+            2.5603,
+            3.1285,
+            2.7851
+          ]
+        }
+      }
+    },
+    "Ours_wo_Transfer": {
+      "quadrant": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "enumeration": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "diagnosis": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "Stage_enumeration": {
+      "quadrant": {
+        "AR": {
+          "mean": 0.0444,
+          "std": 0.0021,
+          "n": 3,
+          "values": [
+            0.042,
+            0.0448,
+            0.0462
+          ]
+        },
+        "AP": {
+          "mean": 0.0355,
+          "std": 0.0029,
+          "n": 3,
+          "values": [
+            0.0322,
+            0.0371,
+            0.0373
+          ]
+        },
+        "AP50": {
+          "mean": 0.2176,
+          "std": 0.0144,
+          "n": 3,
+          "values": [
+            0.2016,
+            0.2215,
+            0.2295
+          ]
+        },
+        "AP75": {
+          "mean": 0.0007,
+          "std": 0.0002,
+          "n": 3,
+          "values": [
+            0.0007,
+            0.0005,
+            0.0009
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0393,
+          "std": 0.0035,
+          "n": 3,
+          "values": [
+            0.0353,
+            0.0416,
+            0.041
+          ]
+        }
+      },
+      "enumeration": {
+        "AR": {
+          "mean": 0.0416,
+          "std": 0.0007,
+          "n": 3,
+          "values": [
+            0.0414,
+            0.0424,
+            0.0412
+          ]
+        },
+        "AP": {
+          "mean": 0.0293,
+          "std": 0.0052,
+          "n": 3,
+          "values": [
+            0.0348,
+            0.0285,
+            0.0245
+          ]
+        },
+        "AP50": {
+          "mean": 0.1546,
+          "std": 0.0052,
+          "n": 3,
+          "values": [
+            0.1606,
+            0.1519,
+            0.1513
+          ]
+        },
+        "AP75": {
+          "mean": 0.0055,
+          "std": 0.0074,
+          "n": 3,
+          "values": [
+            0.0141,
+            0.0011,
+            0.0013
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.031,
+          "std": 0.0058,
+          "n": 3,
+          "values": [
+            0.0372,
+            0.03,
+            0.0258
+          ]
+        }
+      },
+      "diagnosis": {
+        "AR": {
+          "mean": 0.0097,
+          "std": 0.0013,
+          "n": 3,
+          "values": [
+            0.009,
+            0.0087,
+            0.0112
+          ]
+        },
+        "AP": {
+          "mean": 0.001,
+          "std": 0.0003,
+          "n": 3,
+          "values": [
+            0.0009,
+            0.0007,
+            0.0013
+          ]
+        },
+        "AP50": {
+          "mean": 0.0066,
+          "std": 0.0027,
+          "n": 3,
+          "values": [
+            0.0063,
+            0.0041,
+            0.0094
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.001,
+          "std": 0.0003,
+          "n": 3,
+          "values": [
+            0.001,
+            0.0008,
+            0.0014
+          ]
+        }
+      }
+    },
+    "Stage_quadrant": {
+      "quadrant": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "enumeration": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "diagnosis": {
+        "AR": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP50": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "AP75": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "APs": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APm": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "APl": {
+          "mean": 0.0,
+          "std": 0.0,
+          "n": 3,
+          "values": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  },
+  "cpu_gpu_agreement": null,
+  "tables": {
+    "main_results": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/main_results.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/main_results.tex"
+    },
+    "original_vs_reproduced": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/original_vs_reproduced.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/original_vs_reproduced.tex"
+    },
+    "seed_variance": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/seed_variance.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/seed_variance.tex"
+    },
+    "per_class_ap": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/per_class_ap.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/per_class_ap.tex"
+    },
+    "step_sweep": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/step_sweep.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/step_sweep.tex"
+    },
+    "degradation": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/degradation.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/degradation.tex"
+    },
+    "clean_vs_stress": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/clean_vs_stress.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/clean_vs_stress.tex"
+    },
+    "fault_injection": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/fault_injection.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/fault_injection.tex"
+    },
+    "failure_counts": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/failure_counts.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/failure_counts.tex"
+    },
+    "low_resource": {
+      "csv": "/kaggle/working/repo/dentex-repro/paper_assets/tables/low_resource.csv",
+      "tex": "/kaggle/working/repo/dentex-repro/paper_assets/tables/low_resource.tex"
+    }
+  },
+  "contract": {
+    "classes": {
+      "table:main_results": 4,
+      "table:original_vs_reproduced": 2,
+      "table:seed_variance": 2,
+      "table:step_sweep": 2,
+      "table:degradation": 2,
+      "table:clean_vs_stress": 2,
+      "table:fault_injection": 2,
+      "table:low_resource": 2,
+      "table:dataset_audit": 2,
+      "table:failure_counts": 2,
+      "figure:ap_vs_steps": 2,
+      "figure:degradation": 2,
+      "figure:fault_injection": 2,
+      "figure:per_class_ap": 4,
+      "figure:qualitative": 4,
+      "figure:gt_sanity": 2,
+      "figure:error_clusters": 2,
+      "figure:checkpoint_trajectory": 2,
+      "doc:repro_checklist": 1,
+      "doc:deviations": 1,
+      "doc:scope_and_claims": 1
+    },
+    "not_run": [],
+    "total_assets": 45
+  },
+  "ablation_ordering": {
+    "quadrant": {
+      "0.667": [
+        "Ours_wo_Transfer"
+      ],
+      "1.0": [
+        "Ours_full",
+        "Ours_wo_Manipulation",
+        "Ours_wo_Transfer"
+      ]
+    },
+    "enumeration": {
+      "0.667": [
+        "Ours_wo_Transfer"
+      ],
+      "1.0": [
+        "Ours_full",
+        "Ours_wo_Manipulation",
+        "Ours_wo_Transfer"
+      ]
+    },
+    "diagnosis": {
+      "0.667": [
+        "Ours_wo_Transfer"
+      ],
+      "1.0": [
+        "Ours_full",
+        "Ours_wo_Manipulation",
+        "Ours_wo_Transfer"
+      ]
+    }
+  },
+  "ablation_ordering_stable": {
+    "quadrant": false,
+    "enumeration": false,
+    "diagnosis": false
+  },
+  "gpu_hours_spent": 0.0,
+  "manifest": "/kaggle/working/repo/dentex-repro/paper_assets/manifest.json",
+  "kaggle_publish": {
+    "slug": "dentex-repro-ckpts",
+    "staging": "/kaggle/working/kaggle_upload/dentex-repro-ckpts",
+    "message": "evaluation + paper assets (micro mode)",
+    "directories": [
+      "/kaggle/working/runs/micro",
+      "/kaggle/working/repo/dentex-repro/paper_assets"
+    ],
+    "manual_fallback": "Save Version -> Save & Run All, then add the produced output as a Data source on the next notebook (Add Data -> Your Work).",
+    "status": "skipped",
+    "reason": "KAGGLE_USERNAME / KAGGLE_KEY not set \u2014 attach them via Add-ons -> Secrets, or publish manually."
+  },
+  "notebook": "03_evaluate_and_build_assets",
+  "written_at": "2026-08-16T10:41:49+0000"
+}

@@ -1,0 +1,2 @@
+figure:error_clusters was not produced in RUN_MODE=micro.
+Reason: no detection scored above 0.50, so no box was correctly localised and the per-tier label error rate is undefined, not zero (1043 ground-truth boxes, 0 predictions)

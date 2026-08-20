@@ -1,0 +1,29 @@
+{
+  "weights": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/diagnosis_full/model_final.pth",
+  "predictions": "/kaggle/working/runs/micro/predictions/Ours_full_test.json",
+  "split": "diagnosis_test",
+  "annotations": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+  "tier": 2,
+  "device": "cuda",
+  "inference_seed": 0,
+  "sample_step": 1,
+  "num_proposals": 1000,
+  "images": 250,
+  "total_detections": 61876,
+  "mean_seconds_per_image": 0.4832,
+  "median_seconds_per_image": 0.4787,
+  "images_per_minute": 124.18,
+  "failure_counts": {
+    "degenerate_box": 111,
+    "extreme_aspect_ratio": 185
+  },
+  "images_with_no_detections": 0,
+  "class_names": [
+    "Impacted",
+    "Caries",
+    "Periapical Lesion",
+    "Deep Caries"
+  ],
+  "peak_gpu_memory_mb": 1196.7,
+  "runtime_json": "/kaggle/working/runs/micro/predictions/Ours_full_test_runtime.json"
+}

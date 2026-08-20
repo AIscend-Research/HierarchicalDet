@@ -1,0 +1,486 @@
+{
+  "seeds": [
+    0,
+    1
+  ],
+  "runs": [
+    {
+      "weights": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/diagnosis_full/model_final.pth",
+      "weights_sha256": "7d95d9fe9e83a64e95179ba12d49bda62cdafcc86cc4ee89fdfe9c54a436b827",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "config_hash": "7a00fa67ada142ab",
+      "split": "diagnosis_test",
+      "annotations": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+      "image_dir": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/images/test",
+      "tier": 2,
+      "inference_seed": 0,
+      "determinism": {
+        "seed": 0,
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "remaining_nondeterminism": [
+          "atomics in torchvision ROIAlign / NMS CUDA kernels"
+        ]
+      },
+      "sample_step": 1,
+      "num_proposals": 1000,
+      "device": "cuda",
+      "limit": null,
+      "wall_seconds": 131.35,
+      "noisy_box_infer": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/noisy_boxes/enumeration_over_diagnosis_test.json",
+      "noisy_box_infer_jitter": "0.0",
+      "noisy_box_infer_drop": "0.25",
+      "tiers": {
+        "quadrant": {
+          "metrics": {
+            "AP": 2.580190329390915,
+            "AP50": 9.175648751956812,
+            "AP75": 0.654910864428598,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 2.6474457680609333,
+            "AR": 0.25246519929772465
+          },
+          "per_class_AP": {
+            "1Quadrant": 4.583917791170362,
+            "2Quadrant": 0.12199436556931081,
+            "3Quadrant": 2.151971221156455,
+            "4Quadrant": 3.4628779396675315
+          },
+          "recall_detail": {
+            "AR1": 0.04250765553911112,
+            "AR10": 0.17222221543743327,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.25246519929772465
+          },
+          "num_predictions": 61876,
+          "raw": {
+            "AP_Quadrant": 2.580190329390915,
+            "AP50_Quadrant": 9.175648751956812,
+            "AP75_Quadrant": 0.654910864428598,
+            "APs_Quadrant": NaN,
+            "APm_Quadrant": NaN,
+            "APl_Quadrant": 2.6474457680609333,
+            "AP-1Quadrant": 4.583917791170362,
+            "AP-2Quadrant": 0.12199436556931081,
+            "AP-3Quadrant": 2.151971221156455,
+            "AP-4Quadrant": 3.4628779396675315
+          }
+        },
+        "enumeration": {
+          "metrics": {
+            "AP": 1.7994948920712497,
+            "AP50": 6.66021455654891,
+            "AP75": 0.42088267195649887,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 1.8790611364367036,
+            "AR": 0.1644008247271725
+          },
+          "per_class_AP": {
+            "1Enumeration": 0.056577086280056574,
+            "2Enumeration": 0.0,
+            "3Enumeration": 0.0,
+            "4Enumeration": 0.14546119155695963,
+            "5Enumeration": 0.042631159667690904,
+            "6Enumeration": 3.444061962386972,
+            "7Enumeration": 1.7306719889547466,
+            "8Enumeration": 8.97655574772357
+          },
+          "recall_detail": {
+            "AR1": 0.023738249696049745,
+            "AR10": 0.10690820328347495,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.1644008247271725
+          },
+          "num_predictions": 61876,
+          "raw": {
+            "AP_Enumeration": 1.7994948920712497,
+            "AP50_Enumeration": 6.66021455654891,
+            "AP75_Enumeration": 0.42088267195649887,
+            "APs_Enumeration": NaN,
+            "APm_Enumeration": NaN,
+            "APl_Enumeration": 1.8790611364367036,
+            "AP-1Enumeration": 0.056577086280056574,
+            "AP-2Enumeration": 0.0,
+            "AP-3Enumeration": 0.0,
+            "AP-4Enumeration": 0.14546119155695963,
+            "AP-5Enumeration": 0.042631159667690904,
+            "AP-6Enumeration": 3.444061962386972,
+            "AP-7Enumeration": 1.7306719889547466,
+            "AP-8Enumeration": 8.97655574772357
+          }
+        },
+        "diagnosis": {
+          "metrics": {
+            "AP": 4.849125594333372,
+            "AP50": 18.212954112532238,
+            "AP75": 1.0913622851229339,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 5.0547734905781585,
+            "AR": 0.264483066504328
+          },
+          "per_class_AP": {
+            "ImpactedDisease": 10.695229017421424,
+            "CariesDisease": 3.6776220728553,
+            "Periapical LesionDisease": 0.17452569272339077,
+            "Deep CariesDisease": NaN
+          },
+          "recall_detail": {
+            "AR1": 0.04526104013843205,
+            "AR10": 0.18610629143017518,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.264483066504328
+          },
+          "num_predictions": 61876,
+          "raw": {
+            "AP_Disease": 4.849125594333372,
+            "AP50_Disease": 18.212954112532238,
+            "AP75_Disease": 1.0913622851229339,
+            "APs_Disease": NaN,
+            "APm_Disease": NaN,
+            "APl_Disease": 5.0547734905781585,
+            "AP-ImpactedDisease": 10.695229017421424,
+            "AP-CariesDisease": 3.6776220728553,
+            "AP-Periapical LesionDisease": 0.17452569272339077,
+            "AP-Deep CariesDisease": NaN
+          }
+        }
+      },
+      "peak_gpu_memory_mb": 1196.7
+    },
+    {
+      "weights": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/diagnosis_full/model_final.pth",
+      "weights_sha256": "7d95d9fe9e83a64e95179ba12d49bda62cdafcc86cc4ee89fdfe9c54a436b827",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "config_hash": "7a00fa67ada142ab",
+      "split": "diagnosis_test",
+      "annotations": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+      "image_dir": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/images/test",
+      "tier": 2,
+      "inference_seed": 1,
+      "determinism": {
+        "seed": 1,
+        "cudnn_deterministic": true,
+        "cudnn_benchmark": false,
+        "remaining_nondeterminism": [
+          "atomics in torchvision ROIAlign / NMS CUDA kernels"
+        ]
+      },
+      "sample_step": 1,
+      "num_proposals": 1000,
+      "device": "cuda",
+      "limit": null,
+      "wall_seconds": 131.73,
+      "noisy_box_infer": "/kaggle/input/datasets/spreal/jhuhouiou/runs/micro/noisy_boxes/enumeration_over_diagnosis_test.json",
+      "noisy_box_infer_jitter": "0.0",
+      "noisy_box_infer_drop": "0.25",
+      "tiers": {
+        "quadrant": {
+          "metrics": {
+            "AP": 2.6770959033404416,
+            "AP50": 10.044274250119486,
+            "AP75": 0.5189407387723403,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 2.7678919103796518,
+            "AR": 0.2574392440974062
+          },
+          "per_class_AP": {
+            "1Quadrant": 4.677928374413566,
+            "2Quadrant": 0.17723571465756996,
+            "3Quadrant": 2.7197681129851192,
+            "4Quadrant": 3.1334514113055114
+          },
+          "recall_detail": {
+            "AR1": 0.04507964772147462,
+            "AR10": 0.17770449622591664,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.2574392440974062
+          },
+          "num_predictions": 62307,
+          "raw": {
+            "AP_Quadrant": 2.6770959033404416,
+            "AP50_Quadrant": 10.044274250119486,
+            "AP75_Quadrant": 0.5189407387723403,
+            "APs_Quadrant": NaN,
+            "APm_Quadrant": NaN,
+            "APl_Quadrant": 2.7678919103796518,
+            "AP-1Quadrant": 4.677928374413566,
+            "AP-2Quadrant": 0.17723571465756996,
+            "AP-3Quadrant": 2.7197681129851192,
+            "AP-4Quadrant": 3.1334514113055114
+          }
+        },
+        "enumeration": {
+          "metrics": {
+            "AP": 1.8042867154852222,
+            "AP50": 6.250106210484281,
+            "AP75": 0.4737083334305724,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 1.9342706595944787,
+            "AR": 0.15892437967329295
+          },
+          "per_class_AP": {
+            "1Enumeration": 0.0,
+            "2Enumeration": 0.0,
+            "3Enumeration": 0.0,
+            "4Enumeration": 0.09489269522200941,
+            "5Enumeration": 0.0,
+            "6Enumeration": 3.2178006484345496,
+            "7Enumeration": 1.9806377877384003,
+            "8Enumeration": 9.140962592486817
+          },
+          "recall_detail": {
+            "AR1": 0.0254983043072801,
+            "AR10": 0.10598758627872973,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.15892437967329295
+          },
+          "num_predictions": 62307,
+          "raw": {
+            "AP_Enumeration": 1.8042867154852222,
+            "AP50_Enumeration": 6.250106210484281,
+            "AP75_Enumeration": 0.4737083334305724,
+            "APs_Enumeration": NaN,
+            "APm_Enumeration": NaN,
+            "APl_Enumeration": 1.9342706595944787,
+            "AP-1Enumeration": 0.0,
+            "AP-2Enumeration": 0.0,
+            "AP-3Enumeration": 0.0,
+            "AP-4Enumeration": 0.09489269522200941,
+            "AP-5Enumeration": 0.0,
+            "AP-6Enumeration": 3.2178006484345496,
+            "AP-7Enumeration": 1.9806377877384003,
+            "AP-8Enumeration": 9.140962592486817
+          }
+        },
+        "diagnosis": {
+          "metrics": {
+            "AP": 4.908335776714669,
+            "AP50": 17.145271215711723,
+            "AP75": 1.2400396369024247,
+            "APs": NaN,
+            "APm": NaN,
+            "APl": 5.327362989742261,
+            "AR": 0.26750686203839996
+          },
+          "per_class_AP": {
+            "ImpactedDisease": 11.155742417764598,
+            "CariesDisease": 3.4124421713893134,
+            "Periapical LesionDisease": 0.15682274099009336,
+            "Deep CariesDisease": NaN
+          },
+          "recall_detail": {
+            "AR1": 0.045678767357009736,
+            "AR10": 0.1824669497497279,
+            "ARs": -1.0,
+            "ARm": -1.0,
+            "ARl": 0.26750686203839996
+          },
+          "num_predictions": 62307,
+          "raw": {
+            "AP_Disease": 4.908335776714669,
+            "AP50_Disease": 17.145271215711723,
+            "AP75_Disease": 1.2400396369024247,
+            "APs_Disease": NaN,
+            "APm_Disease": NaN,
+            "APl_Disease": 5.327362989742261,
+            "AP-ImpactedDisease": 11.155742417764598,
+            "AP-CariesDisease": 3.4124421713893134,
+            "AP-Periapical LesionDisease": 0.15682274099009336,
+            "AP-Deep CariesDisease": NaN
+          }
+        }
+      },
+      "peak_gpu_memory_mb": 1196.7
+    }
+  ],
+  "aggregate": {
+    "quadrant": {
+      "AR": {
+        "mean": 0.255,
+        "std": 0.0035,
+        "n": 2,
+        "values": [
+          0.2525,
+          0.2574
+        ]
+      },
+      "AP": {
+        "mean": 2.6286,
+        "std": 0.0685,
+        "n": 2,
+        "values": [
+          2.5802,
+          2.6771
+        ]
+      },
+      "AP50": {
+        "mean": 9.61,
+        "std": 0.6142,
+        "n": 2,
+        "values": [
+          9.1756,
+          10.0443
+        ]
+      },
+      "AP75": {
+        "mean": 0.5869,
+        "std": 0.0961,
+        "n": 2,
+        "values": [
+          0.6549,
+          0.5189
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 2.7077,
+        "std": 0.0852,
+        "n": 2,
+        "values": [
+          2.6474,
+          2.7679
+        ]
+      }
+    },
+    "enumeration": {
+      "AR": {
+        "mean": 0.1617,
+        "std": 0.0039,
+        "n": 2,
+        "values": [
+          0.1644,
+          0.1589
+        ]
+      },
+      "AP": {
+        "mean": 1.8019,
+        "std": 0.0034,
+        "n": 2,
+        "values": [
+          1.7995,
+          1.8043
+        ]
+      },
+      "AP50": {
+        "mean": 6.4552,
+        "std": 0.29,
+        "n": 2,
+        "values": [
+          6.6602,
+          6.2501
+        ]
+      },
+      "AP75": {
+        "mean": 0.4473,
+        "std": 0.0374,
+        "n": 2,
+        "values": [
+          0.4209,
+          0.4737
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 1.9067,
+        "std": 0.039,
+        "n": 2,
+        "values": [
+          1.8791,
+          1.9343
+        ]
+      }
+    },
+    "diagnosis": {
+      "AR": {
+        "mean": 0.266,
+        "std": 0.0021,
+        "n": 2,
+        "values": [
+          0.2645,
+          0.2675
+        ]
+      },
+      "AP": {
+        "mean": 4.8787,
+        "std": 0.0419,
+        "n": 2,
+        "values": [
+          4.8491,
+          4.9083
+        ]
+      },
+      "AP50": {
+        "mean": 17.6791,
+        "std": 0.755,
+        "n": 2,
+        "values": [
+          18.213,
+          17.1453
+        ]
+      },
+      "AP75": {
+        "mean": 1.1657,
+        "std": 0.1051,
+        "n": 2,
+        "values": [
+          1.0914,
+          1.24
+        ]
+      },
+      "APs": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APm": {
+        "mean": null,
+        "std": null,
+        "n": 0
+      },
+      "APl": {
+        "mean": 5.1911,
+        "std": 0.1927,
+        "n": 2,
+        "values": [
+          5.0548,
+          5.3274
+        ]
+      }
+    }
+  },
+  "condition": {
+    "axis": "drop",
+    "jitter": 0.0,
+    "drop": 0.25,
+    "label": "drop_0.25",
+    "pretty": "prior-tier detections randomly dropped: 25%"
+  }
+}

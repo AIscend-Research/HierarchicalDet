@@ -1,0 +1,1774 @@
+{
+  "predictions": "/kaggle/working/runs/micro/predictions/Ours_full_test.json",
+  "ground_truth": "/kaggle/input/datasets/spreal/dentex-converted/dentex_converted/coco/test_diagnosis.json",
+  "tier": 2,
+  "score_threshold": 0.5,
+  "iou_threshold": 0.5,
+  "totals": {
+    "gt": 1043,
+    "pred": 0,
+    "missed": 1043
+  },
+  "per_image": [
+    {
+      "image_id": 0,
+      "file_name": "test_0.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 1,
+      "file_name": "test_1.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 2,
+      "file_name": "test_10.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 3,
+      "file_name": "test_100.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 4,
+      "file_name": "test_101.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 5,
+      "file_name": "test_102.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 6,
+      "file_name": "test_103.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 7,
+      "file_name": "test_104.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 8,
+      "file_name": "test_105.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 9,
+      "file_name": "test_106.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 10,
+      "file_name": "test_107.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 11,
+      "file_name": "test_108.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 12,
+      "file_name": "test_109.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 13,
+      "file_name": "test_11.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 14,
+      "file_name": "test_110.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 15,
+      "file_name": "test_111.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 16,
+      "file_name": "test_112.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 17,
+      "file_name": "test_113.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 18,
+      "file_name": "test_114.png",
+      "gt": 14,
+      "pred": 0,
+      "missed": 14
+    },
+    {
+      "image_id": 19,
+      "file_name": "test_115.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 20,
+      "file_name": "test_116.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 21,
+      "file_name": "test_117.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 22,
+      "file_name": "test_118.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 23,
+      "file_name": "test_119.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 24,
+      "file_name": "test_12.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 25,
+      "file_name": "test_120.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 26,
+      "file_name": "test_121.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 27,
+      "file_name": "test_122.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 28,
+      "file_name": "test_123.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 29,
+      "file_name": "test_124.png",
+      "gt": 14,
+      "pred": 0,
+      "missed": 14
+    },
+    {
+      "image_id": 30,
+      "file_name": "test_125.png",
+      "gt": 15,
+      "pred": 0,
+      "missed": 15
+    },
+    {
+      "image_id": 31,
+      "file_name": "test_126.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 32,
+      "file_name": "test_127.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 33,
+      "file_name": "test_128.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 34,
+      "file_name": "test_129.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 35,
+      "file_name": "test_13.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 36,
+      "file_name": "test_130.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 37,
+      "file_name": "test_131.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 38,
+      "file_name": "test_132.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 39,
+      "file_name": "test_133.png",
+      "gt": 11,
+      "pred": 0,
+      "missed": 11
+    },
+    {
+      "image_id": 40,
+      "file_name": "test_134.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 41,
+      "file_name": "test_135.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 42,
+      "file_name": "test_136.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 43,
+      "file_name": "test_137.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 44,
+      "file_name": "test_138.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 45,
+      "file_name": "test_139.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 46,
+      "file_name": "test_14.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 47,
+      "file_name": "test_140.png",
+      "gt": 10,
+      "pred": 0,
+      "missed": 10
+    },
+    {
+      "image_id": 48,
+      "file_name": "test_141.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 49,
+      "file_name": "test_142.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 50,
+      "file_name": "test_143.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 51,
+      "file_name": "test_144.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 52,
+      "file_name": "test_145.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 53,
+      "file_name": "test_146.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 54,
+      "file_name": "test_147.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 55,
+      "file_name": "test_148.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 56,
+      "file_name": "test_149.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 57,
+      "file_name": "test_15.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 58,
+      "file_name": "test_150.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 59,
+      "file_name": "test_151.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 60,
+      "file_name": "test_152.png",
+      "gt": 10,
+      "pred": 0,
+      "missed": 10
+    },
+    {
+      "image_id": 61,
+      "file_name": "test_153.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 62,
+      "file_name": "test_154.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 63,
+      "file_name": "test_155.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 64,
+      "file_name": "test_156.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 65,
+      "file_name": "test_157.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 66,
+      "file_name": "test_158.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 67,
+      "file_name": "test_159.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 68,
+      "file_name": "test_16.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 69,
+      "file_name": "test_160.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 70,
+      "file_name": "test_161.png",
+      "gt": 9,
+      "pred": 0,
+      "missed": 9
+    },
+    {
+      "image_id": 71,
+      "file_name": "test_162.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 72,
+      "file_name": "test_163.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 73,
+      "file_name": "test_164.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 74,
+      "file_name": "test_165.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 75,
+      "file_name": "test_166.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 76,
+      "file_name": "test_167.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 77,
+      "file_name": "test_168.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 78,
+      "file_name": "test_169.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 79,
+      "file_name": "test_17.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 80,
+      "file_name": "test_170.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 81,
+      "file_name": "test_171.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 82,
+      "file_name": "test_172.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 83,
+      "file_name": "test_173.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 84,
+      "file_name": "test_174.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 85,
+      "file_name": "test_175.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 86,
+      "file_name": "test_176.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 87,
+      "file_name": "test_177.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 88,
+      "file_name": "test_178.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 89,
+      "file_name": "test_179.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 90,
+      "file_name": "test_18.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 91,
+      "file_name": "test_180.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 92,
+      "file_name": "test_181.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 93,
+      "file_name": "test_182.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 94,
+      "file_name": "test_183.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 95,
+      "file_name": "test_184.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 96,
+      "file_name": "test_185.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 97,
+      "file_name": "test_186.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 98,
+      "file_name": "test_187.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 99,
+      "file_name": "test_188.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 100,
+      "file_name": "test_189.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 101,
+      "file_name": "test_19.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 102,
+      "file_name": "test_190.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 103,
+      "file_name": "test_191.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 104,
+      "file_name": "test_192.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 105,
+      "file_name": "test_193.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 106,
+      "file_name": "test_194.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 107,
+      "file_name": "test_195.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 108,
+      "file_name": "test_196.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 109,
+      "file_name": "test_197.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 110,
+      "file_name": "test_198.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 111,
+      "file_name": "test_199.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 112,
+      "file_name": "test_2.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 113,
+      "file_name": "test_20.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 114,
+      "file_name": "test_200.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 115,
+      "file_name": "test_201.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 116,
+      "file_name": "test_202.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 117,
+      "file_name": "test_203.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 118,
+      "file_name": "test_204.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 119,
+      "file_name": "test_205.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 120,
+      "file_name": "test_206.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 121,
+      "file_name": "test_207.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 122,
+      "file_name": "test_208.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 123,
+      "file_name": "test_209.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 124,
+      "file_name": "test_21.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 125,
+      "file_name": "test_210.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 126,
+      "file_name": "test_211.png",
+      "gt": 16,
+      "pred": 0,
+      "missed": 16
+    },
+    {
+      "image_id": 127,
+      "file_name": "test_212.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 128,
+      "file_name": "test_213.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 129,
+      "file_name": "test_214.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 130,
+      "file_name": "test_215.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 131,
+      "file_name": "test_216.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 132,
+      "file_name": "test_217.png",
+      "gt": 9,
+      "pred": 0,
+      "missed": 9
+    },
+    {
+      "image_id": 133,
+      "file_name": "test_218.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 134,
+      "file_name": "test_219.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 135,
+      "file_name": "test_22.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 136,
+      "file_name": "test_220.png",
+      "gt": 9,
+      "pred": 0,
+      "missed": 9
+    },
+    {
+      "image_id": 137,
+      "file_name": "test_221.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 138,
+      "file_name": "test_222.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 139,
+      "file_name": "test_223.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 140,
+      "file_name": "test_224.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 141,
+      "file_name": "test_225.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 142,
+      "file_name": "test_226.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 143,
+      "file_name": "test_227.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 144,
+      "file_name": "test_228.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 145,
+      "file_name": "test_229.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 146,
+      "file_name": "test_23.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 147,
+      "file_name": "test_230.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 148,
+      "file_name": "test_231.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 149,
+      "file_name": "test_232.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 150,
+      "file_name": "test_233.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 151,
+      "file_name": "test_234.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 152,
+      "file_name": "test_235.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 153,
+      "file_name": "test_236.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 154,
+      "file_name": "test_237.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 155,
+      "file_name": "test_238.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 156,
+      "file_name": "test_239.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 157,
+      "file_name": "test_24.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 158,
+      "file_name": "test_240.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 159,
+      "file_name": "test_241.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 160,
+      "file_name": "test_242.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 161,
+      "file_name": "test_243.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 162,
+      "file_name": "test_244.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 163,
+      "file_name": "test_245.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 164,
+      "file_name": "test_246.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 165,
+      "file_name": "test_247.png",
+      "gt": 13,
+      "pred": 0,
+      "missed": 13
+    },
+    {
+      "image_id": 166,
+      "file_name": "test_248.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 167,
+      "file_name": "test_249.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 168,
+      "file_name": "test_25.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 169,
+      "file_name": "test_26.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 170,
+      "file_name": "test_27.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 171,
+      "file_name": "test_28.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 172,
+      "file_name": "test_29.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 173,
+      "file_name": "test_3.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 174,
+      "file_name": "test_30.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 175,
+      "file_name": "test_31.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 176,
+      "file_name": "test_32.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 177,
+      "file_name": "test_33.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 178,
+      "file_name": "test_34.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 179,
+      "file_name": "test_35.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 180,
+      "file_name": "test_36.png",
+      "gt": 10,
+      "pred": 0,
+      "missed": 10
+    },
+    {
+      "image_id": 181,
+      "file_name": "test_37.png",
+      "gt": 9,
+      "pred": 0,
+      "missed": 9
+    },
+    {
+      "image_id": 182,
+      "file_name": "test_38.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 183,
+      "file_name": "test_39.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 184,
+      "file_name": "test_4.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 185,
+      "file_name": "test_40.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 186,
+      "file_name": "test_41.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 187,
+      "file_name": "test_42.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 188,
+      "file_name": "test_43.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 189,
+      "file_name": "test_44.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 190,
+      "file_name": "test_45.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 191,
+      "file_name": "test_46.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 192,
+      "file_name": "test_47.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 193,
+      "file_name": "test_48.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 194,
+      "file_name": "test_49.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 195,
+      "file_name": "test_5.png",
+      "gt": 12,
+      "pred": 0,
+      "missed": 12
+    },
+    {
+      "image_id": 196,
+      "file_name": "test_50.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 197,
+      "file_name": "test_51.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 198,
+      "file_name": "test_52.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 199,
+      "file_name": "test_53.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 200,
+      "file_name": "test_54.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 201,
+      "file_name": "test_55.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 202,
+      "file_name": "test_56.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 203,
+      "file_name": "test_57.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 204,
+      "file_name": "test_58.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 205,
+      "file_name": "test_59.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 206,
+      "file_name": "test_6.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 207,
+      "file_name": "test_60.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 208,
+      "file_name": "test_61.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 209,
+      "file_name": "test_62.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 210,
+      "file_name": "test_63.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 211,
+      "file_name": "test_64.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 212,
+      "file_name": "test_65.png",
+      "gt": 8,
+      "pred": 0,
+      "missed": 8
+    },
+    {
+      "image_id": 213,
+      "file_name": "test_66.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 214,
+      "file_name": "test_67.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 215,
+      "file_name": "test_68.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 216,
+      "file_name": "test_69.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 217,
+      "file_name": "test_7.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 218,
+      "file_name": "test_70.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 219,
+      "file_name": "test_71.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 220,
+      "file_name": "test_72.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 221,
+      "file_name": "test_73.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 222,
+      "file_name": "test_74.png",
+      "gt": 7,
+      "pred": 0,
+      "missed": 7
+    },
+    {
+      "image_id": 223,
+      "file_name": "test_75.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 224,
+      "file_name": "test_76.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 225,
+      "file_name": "test_77.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 226,
+      "file_name": "test_78.png",
+      "gt": 0,
+      "pred": 0,
+      "missed": 0
+    },
+    {
+      "image_id": 227,
+      "file_name": "test_79.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 228,
+      "file_name": "test_8.png",
+      "gt": 10,
+      "pred": 0,
+      "missed": 10
+    },
+    {
+      "image_id": 229,
+      "file_name": "test_80.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 230,
+      "file_name": "test_81.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 231,
+      "file_name": "test_82.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 232,
+      "file_name": "test_83.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 233,
+      "file_name": "test_84.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 234,
+      "file_name": "test_85.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 235,
+      "file_name": "test_86.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 236,
+      "file_name": "test_87.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 237,
+      "file_name": "test_88.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 238,
+      "file_name": "test_89.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 239,
+      "file_name": "test_9.png",
+      "gt": 5,
+      "pred": 0,
+      "missed": 5
+    },
+    {
+      "image_id": 240,
+      "file_name": "test_90.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 241,
+      "file_name": "test_91.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 242,
+      "file_name": "test_92.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 243,
+      "file_name": "test_93.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 244,
+      "file_name": "test_94.png",
+      "gt": 1,
+      "pred": 0,
+      "missed": 1
+    },
+    {
+      "image_id": 245,
+      "file_name": "test_95.png",
+      "gt": 3,
+      "pred": 0,
+      "missed": 3
+    },
+    {
+      "image_id": 246,
+      "file_name": "test_96.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    },
+    {
+      "image_id": 247,
+      "file_name": "test_97.png",
+      "gt": 6,
+      "pred": 0,
+      "missed": 6
+    },
+    {
+      "image_id": 248,
+      "file_name": "test_98.png",
+      "gt": 2,
+      "pred": 0,
+      "missed": 2
+    },
+    {
+      "image_id": 249,
+      "file_name": "test_99.png",
+      "gt": 4,
+      "pred": 0,
+      "missed": 4
+    }
+  ],
+  "confusion": {
+    "0": {},
+    "1": {},
+    "2": {}
+  },
+  "error_rate_by_tier": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0
+  }
+}

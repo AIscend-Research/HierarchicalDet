@@ -1,0 +1,1 @@
+AP against diffusion sampling steps for the full model, with measured per-image latency on the right axis. Error bars are the std over inference seeds.

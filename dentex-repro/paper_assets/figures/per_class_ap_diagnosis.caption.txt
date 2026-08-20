@@ -1,0 +1,1 @@
+Per-class AP at the diagnosis tier. OUR EXTENSION: the original paper reports tier-level aggregates only. Not shown: Deep CariesDisease, which the released test split does not annotate at all, so no AP can be computed for it.
