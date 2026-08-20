@@ -122,7 +122,10 @@ def main() -> int:
         "HAS_GPU": False,
         "FULL_WEIGHTS": None,
         "models": {},
-        "training": setup_env.read_notebook_summary("02_train_all") or {},
+        # Same fallback chain as notebook 03's own cell 2 (which this runner
+        # skips): the final training run's summary supersedes notebook 02's.
+        "training": (setup_env.read_notebook_summary("04_final_training_run")
+                     or setup_env.read_notebook_summary("02_train_all") or {}),
         "agreement": None,
         "PUBLISH_KAGGLE_DATASET": False,
         "CKPT_DATASET_SLUG": "dentex-repro-ckpts",

@@ -12,7 +12,7 @@ Generated from executed-run records only.
 - run mode: **micro**
 - training seed: 40244023 (the repo's own SEED)
 - inference seeds: [0, 1, 2]
-- multi-GPU: {}
+- multi-GPU: {"requested": 2, "works": true, "error": null}
 
 ## Converted dataset
 
@@ -30,11 +30,33 @@ Generated from executed-run records only.
 
 ## Runs
 
+**Provenance: the run records below document the retraining written at 2026-08-20T06:50:02+0000; every evaluation number in this build was produced earlier (written at 2026-08-16T10:41:49+0000) from checkpoints whose training records were not retained. Records and numbers describe DIFFERENT checkpoints until notebook 03 is re-run against the retained runs.**
+
 | run | config hash | iterations | seed | batch | wall (s) | GPUs | stopped on budget |
 |---|---|---|---|---|---|---|---|
+| quadrant_stage | `7c74c8f06efa` | 600 | 40244023 | 2 | 3101.4 | 2 | False |
+| enumeration_stage | `89ed50e90e33` | 600 | 40244023 | 2 | 3253.8 | 2 | False |
+| diagnosis_full | `87a8386638c9` | 900 | 40244023 | 2 | 4151.6 | 2 | False |
+| diagnosis_wo_manipulation | `f4418137b3d6` | 900 | 40244023 | 2 | 4306.2 | 2 | False |
+| diagnosis_wo_transfer | `375d5feecaac` | 900 | 40244023 | 2 | 4295.5 | 2 | False |
 
 ## Exact commands
 
+```
+/usr/bin/python3 /kaggle/working/repo/dentex-repro/src/train_entry.py --config-file /kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.quadrant.yaml --num-gpus 2 --resume --budget-seconds 5960.1 --disk-floor-gb 3.0 --heartbeat /kaggle/working/runs/micro/quadrant_stage/heartbeat.json OUTPUT_DIR /kaggle/working/runs/micro/quadrant_stage MODEL.WEIGHTS /kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth SOLVER.MAX_ITER 600 SOLVER.IMS_PER_BATCH 2 SOLVER.CHECKPOINT_PERIOD 150 SOLVER.AMP.ENABLED True MODEL_EMA.ENABLED False TEST.EVAL_PERIOD 0 SEED 40244023
+```
+```
+/usr/bin/python3 /kaggle/working/repo/dentex-repro/src/train_entry.py --config-file /kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.enumeration.yaml --num-gpus 2 --resume --budget-seconds 6300.0 --disk-floor-gb 3.0 --heartbeat /kaggle/working/runs/micro/enumeration_stage/heartbeat.json OUTPUT_DIR /kaggle/working/runs/micro/enumeration_stage MODEL.WEIGHTS /kaggle/working/runs/micro/quadrant_stage/model_final.pth SOLVER.MAX_ITER 600 SOLVER.IMS_PER_BATCH 2 SOLVER.CHECKPOINT_PERIOD 150 SOLVER.AMP.ENABLED True MODEL_EMA.ENABLED False TEST.EVAL_PERIOD 0 SEED 40244023
+```
+```
+/usr/bin/python3 /kaggle/working/repo/dentex-repro/src/train_entry.py --config-file /kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml --num-gpus 2 --resume --budget-seconds 9900.0 --trajectory {"300": "traj_033", "600": "traj_067"} --disk-floor-gb 3.0 --heartbeat /kaggle/working/runs/micro/diagnosis_full/heartbeat.json OUTPUT_DIR /kaggle/working/runs/micro/diagnosis_full MODEL.WEIGHTS /kaggle/working/runs/micro/enumeration_stage/model_final.pth SOLVER.MAX_ITER 900 SOLVER.IMS_PER_BATCH 2 SOLVER.CHECKPOINT_PERIOD 225 SOLVER.AMP.ENABLED True MODEL_EMA.ENABLED False TEST.EVAL_PERIOD 0 SEED 40244023
+```
+```
+/usr/bin/python3 /kaggle/working/repo/dentex-repro/src/train_entry.py --config-file /kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml --num-gpus 2 --resume --budget-seconds 9900.0 --trajectory {"300": "traj_033", "600": "traj_067"} --disk-floor-gb 3.0 --heartbeat /kaggle/working/runs/micro/diagnosis_wo_manipulation/heartbeat.json OUTPUT_DIR /kaggle/working/runs/micro/diagnosis_wo_manipulation MODEL.WEIGHTS /kaggle/working/runs/micro/enumeration_stage/model_final.pth SOLVER.MAX_ITER 900 SOLVER.IMS_PER_BATCH 2 SOLVER.CHECKPOINT_PERIOD 225 SOLVER.AMP.ENABLED True MODEL_EMA.ENABLED False TEST.EVAL_PERIOD 0 SEED 40244023
+```
+```
+/usr/bin/python3 /kaggle/working/repo/dentex-repro/src/train_entry.py --config-file /kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml --num-gpus 2 --resume --budget-seconds 9900.0 --trajectory {"300": "traj_033", "600": "traj_067"} --disk-floor-gb 3.0 --heartbeat /kaggle/working/runs/micro/diagnosis_wo_transfer/heartbeat.json OUTPUT_DIR /kaggle/working/runs/micro/diagnosis_wo_transfer MODEL.WEIGHTS /kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth SOLVER.MAX_ITER 900 SOLVER.IMS_PER_BATCH 2 SOLVER.CHECKPOINT_PERIOD 225 SOLVER.AMP.ENABLED True MODEL_EMA.ENABLED False TEST.EVAL_PERIOD 0 SEED 40244023
+```
 
 ## Remaining nondeterminism
 

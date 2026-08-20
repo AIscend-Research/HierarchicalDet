@@ -49,7 +49,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "d5b065cf05307cf89d572b150dccf00614e9d5a4c1ed25223d625d48d220b533",
       "bytes": 1553
     },
@@ -62,7 +62,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "22231cf9b8b66575fb53763366b0dd876f34c442f231f29691972ac96e27ed8f",
       "bytes": 2276
     },
@@ -75,7 +75,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "original column is quoted from the paper, not produced here",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "16a6bbd2665264aa72cc2ddf3f26496fee1f555863ba061b94d0e19efdfec17f",
       "bytes": 9422
     },
@@ -88,7 +88,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "original column is quoted from the paper, not produced here",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "f09be6f6ae65eef77abe59c6586dd94ba6a972e41a2d290081afe41e8ceafce8",
       "bytes": 12373
     },
@@ -101,7 +101,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "06fb1ce39c2ae22e4736a76a724e74d2afa519705bdd525e5de6e170add61655",
       "bytes": 6483
     },
@@ -114,7 +114,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "f29f7ddd37911a259b551ee92fe468064ad2c9b3d954e9e795ee76330f1aec98",
       "bytes": 8685
     },
@@ -127,7 +127,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "a7f276c5d460483e3186c539b7ff0ca8f3895af5f5f8b6649fe69a2ae490e0a9",
       "bytes": 8236
     },
@@ -140,7 +140,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "0589b1968ba39f6962cbd539c1e0603064e21a33c6fa4cd74e961fe91b384e8c",
       "bytes": 9742
     },
@@ -153,7 +153,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "3c2b2f4cb16f488206f5744a3427043d09738030652caf58864e0504886fd539",
       "bytes": 607
     },
@@ -166,7 +166,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "e2f48a90dac7f9fe8fa0bc660dd63a051067b44c527850af0308190f25585455",
       "bytes": 1093
     },
@@ -179,7 +179,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "d75eeafa5a16b24e69ba73c34f82daef3871691049213b5e93f1ba0158af3f8e",
       "bytes": 2016
     },
@@ -192,7 +192,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "4a4e60a72acff42b8b995c7cf5c6463934486cfb7c1697fb6c430a8866a6b002",
       "bytes": 2747
     },
@@ -205,7 +205,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "ccfa9e78882f167cdd71967b6c667923da8a4d1c002b3c378002bbeeb51530c4",
       "bytes": 3200
     },
@@ -218,7 +218,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "5ae3fd8db96e135952e3066128761a2abea70900904dcaf5b61e6e585f16db89",
       "bytes": 4128
     },
@@ -231,7 +231,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "48c2bb4aa7fcae83c347be467e7bc1d14063c8598a876d90ebd7d34302c174ad",
       "bytes": 1732
     },
@@ -244,7 +244,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "b9f83e76182674a2eb084e44fdc2ca0411343d80ed2fdaaa94b06be9bb54d437",
       "bytes": 2471
     },
@@ -257,7 +257,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "6b328dd5106206d3dfa290bd89f8b11fe4885d5777af5a597244819956061388",
       "bytes": 347
     },
@@ -270,7 +270,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "aab1de0ec8e4cbd35fc494d73b336213edf5235bb39b6afb6dc177bacf23b377",
       "bytes": 832
     },
@@ -283,7 +283,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "9cac0d1ecdff0e111eace39f76836cfd66a806cd7db4b84f83793619f8054ac5",
       "bytes": 179
     },
@@ -296,7 +296,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "bacb4e1f0f28a8919f863e6774afa20166caab9fa09f486e28d0de522337dd1c",
       "bytes": 602
     },
@@ -309,8 +309,8 @@
       "config_hash": null,
       "inputs": [],
       "note": "AP against diffusion sampling steps for the full model, with measured per-image latency on the right axis. Error bars are the std over inference seeds.",
-      "timestamp": "2026-08-19T17:39:54-0700",
-      "sha256": "445b5a2de21daeaf5fa75fc4a228f0f6526cdf13bbadaeee15edcc84057a5a12",
+      "timestamp": "2026-08-20T10:02:54-0700",
+      "sha256": "19f78beb7aa149f6d59bd602d14aca12e6b50353796734ef822ad8fd86f319a9",
       "bytes": 17139
     },
     {
@@ -322,7 +322,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "AP against diffusion sampling steps for the full model, with measured per-image latency on the right axis. Error bars are the std over inference seeds.",
-      "timestamp": "2026-08-19T17:39:54-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "a54db333446127ac093d08d2a1c9ac3263566eb2947594059329113aff983988",
       "bytes": 72199
     },
@@ -335,8 +335,8 @@
       "config_hash": null,
       "inputs": [],
       "note": "Diagnosis-tier AP under Gaussian blur, JPEG recompression and downscaling, one panel per corruption because the severities are different quantities in different units. Dotted line is the clean baseline (AP=4.8787).",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "9d6da8a57797c89ccdbe2ce8f15594680c09fb991324ffecb1085908db39e685",
+      "timestamp": "2026-08-20T10:02:54-0700",
+      "sha256": "91cd68356978ea9fa79748c7f1b54824df5b2240a31876b875f743e0b1fb99b3",
       "bytes": 14883
     },
     {
@@ -348,7 +348,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "Diagnosis-tier AP under Gaussian blur, JPEG recompression and downscaling, one panel per corruption because the severities are different quantities in different units. Dotted line is the clean baseline (AP=4.8787).",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "444e902baf8ae8308a19225a7079e67cec4bc02b3ba679576e9586cd3fdb0d83",
       "bytes": 91416
     },
@@ -361,7 +361,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "no detection scored above 0.50, so no box was correctly localised and the per-tier label error rate is undefined, not zero (1043 ground-truth boxes, 0 predictions)",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": null,
       "bytes": null
     },
@@ -374,7 +374,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "all 6 fault conditions returned identical per-seed AP values, so the prior-tier perturbation was not applied (the detector injects nothing when no prior box clears the score threshold). The experiment did not test what it claims to test.",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": null,
       "bytes": null
     },
@@ -387,8 +387,8 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-class AP at the enumeration tier. OUR EXTENSION: the original paper reports tier-level aggregates only.",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "7a8d36dd3faf00c1bcd56fe7c1498759d2b47d1e43387d2ef3bd7cea566813b3",
+      "timestamp": "2026-08-20T10:02:54-0700",
+      "sha256": "1ce983d0852abc9a3031132d855586b6614a123dddb0b3ccea9f13732709b85c",
       "bytes": 28887
     },
     {
@@ -400,7 +400,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-class AP at the enumeration tier. OUR EXTENSION: the original paper reports tier-level aggregates only.",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "06aae38c6a0f1eb380c002a1a15245e9eef9aa0ff38fb7ad192e4b782426d5a3",
       "bytes": 92518
     },
@@ -413,8 +413,8 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-class AP at the diagnosis tier. OUR EXTENSION: the original paper reports tier-level aggregates only. Not shown: Deep CariesDisease, which the released test split does not annotate at all, so no AP can be computed for it.",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "8d128e1d8906b3936c38954658b3c51da99c36d05e2b98f49554fa6599b05983",
+      "timestamp": "2026-08-20T10:02:54-0700",
+      "sha256": "da895b55f8075217759138789a366f26537c3939234c1031573c2a147d6a5e3b",
       "bytes": 27466
     },
     {
@@ -426,7 +426,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-class AP at the diagnosis tier. OUR EXTENSION: the original paper reports tier-level aggregates only. Not shown: Deep CariesDisease, which the released test split does not annotate at all, so no AP can be computed for it.",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:54-0700",
       "sha256": "b5386fb4548eaa6d61f81bf5ff3956d96910a6205727b2e6717aebef8d5f314d",
       "bytes": 75960
     },
@@ -439,8 +439,8 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-tier AP against training progress for each diagnosis variant. Stable ordering across checkpoints is evidence the ablation conclusion is not an artifact of the shortened schedule; unstable ordering is itself a finding.",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "22cd728fce1803199e4df13f3c773145d0410e0035aa7da02bbb075b8d583d87",
+      "timestamp": "2026-08-20T10:02:55-0700",
+      "sha256": "2acfaf12586f50efbe2e26e56a810af334889ffb6fc2385c086c08250e5a0ef4",
       "bytes": 14983
     },
     {
@@ -452,7 +452,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "Per-tier AP against training progress for each diagnosis variant. Stable ordering across checkpoints is evidence the ablation conclusion is not an artifact of the shortened schedule; unstable ordering is itself a finding.",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:55-0700",
       "sha256": "031f7514a61b85b558b685ce6418e8fd06fb80e7340384f8594c930141eed015",
       "bytes": 75016
     },
@@ -465,9 +465,9 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "3e03bcecbb0f1d12bc3aa1a0356ccbf6ba686527b581177f50f171a8819e8a81",
-      "bytes": 2031
+      "timestamp": "2026-08-20T10:02:55-0700",
+      "sha256": "2727d1819096439f0e74f6b266be994b01c3793e0bef642a24302466d7680827",
+      "bytes": 5982
     },
     {
       "path": "paper_assets/deviations.md",
@@ -478,7 +478,7 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:55-0700",
+      "timestamp": "2026-08-20T10:02:55-0700",
       "sha256": "f184e02a3cc270492706110c7aa396ab05e4af4c2023ae8b4d8e6479be226ac0",
       "bytes": 2154
     },
@@ -491,9 +491,9 @@
       "config_hash": null,
       "inputs": [],
       "note": "",
-      "timestamp": "2026-08-19T17:39:55-0700",
-      "sha256": "15c83e75b871d8a404ab5c65b6fda31fa2e425b4dc9622badfd423bf4b9ac962",
-      "bytes": 3459
+      "timestamp": "2026-08-20T10:02:55-0700",
+      "sha256": "65901ea1158d88e8b741de4259e8397d5860c9e9b0fced9a765b69ef7c7fb2bc",
+      "bytes": 3411
     }
   ],
   "environment": {
@@ -1465,5 +1465,5 @@
       "zstandard==0.25.0"
     ]
   },
-  "updated_at": "2026-08-19T17:39:55-0700"
+  "updated_at": "2026-08-20T10:02:55-0700"
 }

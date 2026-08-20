@@ -1,6 +1,6 @@
 # Scope, claims and what a reviewer can re-verify
 
-Run mode: **micro**. GPU-hours accounted for by the run records here: **1.96**. Operator-reported total for the study: **22.15** (recollected, not measured; see Compute actually spent).
+Run mode: **micro**. Measured GPU-hours (training records + evaluation results): **7.27**.
 
 ## Claim coverage
 
@@ -17,20 +17,21 @@ Run mode: **micro**. GPU-hours accounted for by the run records here: **1.96**. 
 
 ## Compute actually spent
 
-Two different things, kept apart on purpose.
-
 | source | GPU-hours | provenance |
 |---|---|---|
-| training runs (retained run records) | 0.00 | measured; `run_record.json` per stage |
+| training runs (retained run records) | 5.31 | measured; `run_record.json` per stage |
 | evaluation runs in `results_raw/` | 1.96 | measured; every run records its own `wall_seconds` |
-| total measured | 1.96 | sum of the two rows above |
-| whole study, operator-reported | 22.15 | **recollected, not measured** |
+| total measured | 7.27 | sum of the two rows above |
 
-The gap is training. Training ran in earlier sessions whose `runs/*/run_record.json` files were not carried into this repository, so the training cost cannot be derived from anything here and is not independently checkable. Notebook 04 retains those records into `results_raw/<mode>/run_records/`, which closes the gap.
+**Provenance: the run records below document the retraining written at 2026-08-20T06:50:02+0000; every evaluation number in this build was produced earlier (written at 2026-08-16T10:41:49+0000) from checkpoints whose training records were not retained. Records and numbers describe DIFFERENT checkpoints until notebook 03 is re-run against the retained runs.**
 
 | run | wall (s) | GPUs |
 |---|---|---|
-| no training run records were retained | n/a | n/a |
+| quadrant_stage | 3101.4 | 2 |
+| enumeration_stage | 3253.8 | 2 |
+| diagnosis_full | 4151.6 | 2 |
+| diagnosis_wo_manipulation | 4306.2 | 2 |
+| diagnosis_wo_transfer | 4295.5 | 2 |
 
 ## Re-verifying without retraining
 

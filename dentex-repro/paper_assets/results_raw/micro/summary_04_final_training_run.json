@@ -1,0 +1,812 @@
+{
+  "run_mode": "micro",
+  "num_gpus": 2,
+  "multi_gpu": {
+    "requested": 2,
+    "works": true,
+    "error": null
+  },
+  "preflight": {
+    "weights": "/kaggle/working/runs/micro/preflight/model_final.pth",
+    "metrics": {
+      "quadrant": {
+        "AP": NaN,
+        "AP50": NaN,
+        "AP75": NaN,
+        "APs": NaN,
+        "APm": NaN,
+        "APl": NaN,
+        "AR": null
+      },
+      "enumeration": {
+        "AP": NaN,
+        "AP50": NaN,
+        "AP75": NaN,
+        "APs": NaN,
+        "APm": NaN,
+        "APl": NaN,
+        "AR": null
+      },
+      "diagnosis": {
+        "AP": NaN,
+        "AP50": NaN,
+        "AP75": NaN,
+        "APs": NaN,
+        "APm": NaN,
+        "APl": NaN,
+        "AR": null
+      }
+    }
+  },
+  "calibration": {
+    "iterations_timed": 34,
+    "warmup_skipped": 5,
+    "iters_per_second": 0.11351,
+    "measured_at": "2026-08-20T01:06:56+0000",
+    "tag": "swinb_gpu2",
+    "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.quadrant.yaml",
+    "num_gpus": 2,
+    "ims_per_batch": 2,
+    "cached": false,
+    "probe_seconds": 339.9,
+    "probe_budget_seconds": 300,
+    "probe_charged": true
+  },
+  "records": [
+    {
+      "output_dir": "/kaggle/working/runs/micro/quadrant_stage",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.quadrant.yaml",
+      "overrides": [
+        "OUTPUT_DIR",
+        "/kaggle/working/runs/micro/quadrant_stage",
+        "MODEL.WEIGHTS",
+        "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+        "SOLVER.MAX_ITER",
+        "600",
+        "SOLVER.IMS_PER_BATCH",
+        "2",
+        "SOLVER.CHECKPOINT_PERIOD",
+        "150",
+        "SOLVER.AMP.ENABLED",
+        "True",
+        "MODEL_EMA.ENABLED",
+        "False",
+        "TEST.EVAL_PERIOD",
+        "0",
+        "SEED",
+        "40244023"
+      ],
+      "seed": 40244023,
+      "max_iter": 600,
+      "final_iteration": 600,
+      "start_iteration": 0,
+      "ims_per_batch": 2,
+      "amp": true,
+      "ema": false,
+      "num_gpus": 2,
+      "wall_seconds": 3101.4,
+      "budget_seconds": 5960.1,
+      "stopped_on_time_budget": false,
+      "stopped_out_of_disk": false,
+      "weights_init": "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+      "noisy_box_train": null,
+      "noisy_box_val": null,
+      "tier": "0",
+      "trajectory_checkpoints": {},
+      "device": "cuda",
+      "name": "quadrant_stage",
+      "train_split": "quadrant_train",
+      "plan": {
+        "max_iter": 600,
+        "source": "calibrated from 0.1135 it/s over 34 probe iterations",
+        "budget_hours": 1.75,
+        "budget_seconds": 5960.1,
+        "probe_seconds_charged": 339.9,
+        "raw_estimate": 676.5,
+        "round_to": 300
+      },
+      "trajectory": {},
+      "manipulation": false,
+      "launch": {
+        "command": [
+          "/usr/bin/python3",
+          "/kaggle/working/repo/dentex-repro/src/train_entry.py",
+          "--config-file",
+          "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.quadrant.yaml",
+          "--num-gpus",
+          "2",
+          "--resume",
+          "--budget-seconds",
+          "5960.1",
+          "--disk-floor-gb",
+          "3.0",
+          "--heartbeat",
+          "/kaggle/working/runs/micro/quadrant_stage/heartbeat.json",
+          "OUTPUT_DIR",
+          "/kaggle/working/runs/micro/quadrant_stage",
+          "MODEL.WEIGHTS",
+          "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+          "SOLVER.MAX_ITER",
+          "600",
+          "SOLVER.IMS_PER_BATCH",
+          "2",
+          "SOLVER.CHECKPOINT_PERIOD",
+          "150",
+          "SOLVER.AMP.ENABLED",
+          "True",
+          "MODEL_EMA.ENABLED",
+          "False",
+          "TEST.EVAL_PERIOD",
+          "0",
+          "SEED",
+          "40244023"
+        ],
+        "log": "/kaggle/working/runs/micro/quadrant_stage/train.log",
+        "wall_seconds": 3137.5
+      },
+      "config_hash": "7c74c8f06efaa614",
+      "disk": {
+        "removed": [
+          "model_0000599.pth"
+        ],
+        "slimmed": [
+          {
+            "path": "/kaggle/working/runs/micro/quadrant_stage/model_final.pth",
+            "bytes_before": 2081747876,
+            "bytes_after": 694310999,
+            "dropped": [
+              "trainer"
+            ],
+            "freed_gb": 1.29
+          }
+        ],
+        "disk_free_gb": 18.4
+      },
+      "kind": "prerequisite"
+    },
+    {
+      "output_dir": "/kaggle/working/runs/micro/enumeration_stage",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.enumeration.yaml",
+      "overrides": [
+        "OUTPUT_DIR",
+        "/kaggle/working/runs/micro/enumeration_stage",
+        "MODEL.WEIGHTS",
+        "/kaggle/working/runs/micro/quadrant_stage/model_final.pth",
+        "SOLVER.MAX_ITER",
+        "600",
+        "SOLVER.IMS_PER_BATCH",
+        "2",
+        "SOLVER.CHECKPOINT_PERIOD",
+        "150",
+        "SOLVER.AMP.ENABLED",
+        "True",
+        "MODEL_EMA.ENABLED",
+        "False",
+        "TEST.EVAL_PERIOD",
+        "0",
+        "SEED",
+        "40244023"
+      ],
+      "seed": 40244023,
+      "max_iter": 600,
+      "final_iteration": 600,
+      "start_iteration": 0,
+      "ims_per_batch": 2,
+      "amp": true,
+      "ema": false,
+      "num_gpus": 2,
+      "wall_seconds": 3253.8,
+      "budget_seconds": 6300.0,
+      "stopped_on_time_budget": false,
+      "stopped_out_of_disk": false,
+      "weights_init": "/kaggle/working/runs/micro/quadrant_stage/model_final.pth",
+      "noisy_box_train": "/kaggle/working/runs/micro/noisy_boxes/quadrant_over_quadrant_enumeration_train.json",
+      "noisy_box_val": "/kaggle/working/runs/micro/noisy_boxes/quadrant_over_diagnosis_val.json",
+      "tier": "1",
+      "trajectory_checkpoints": {},
+      "device": "cuda",
+      "name": "enumeration_stage",
+      "train_split": "quadrant_enumeration_train",
+      "plan": {
+        "max_iter": 600,
+        "source": "calibrated from 0.1135 it/s over 34 probe iterations",
+        "budget_hours": 1.75,
+        "budget_seconds": 6300.0,
+        "probe_seconds_charged": 0.0,
+        "raw_estimate": 715.1,
+        "round_to": 300
+      },
+      "trajectory": {},
+      "manipulation": true,
+      "launch": {
+        "command": [
+          "/usr/bin/python3",
+          "/kaggle/working/repo/dentex-repro/src/train_entry.py",
+          "--config-file",
+          "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.enumeration.yaml",
+          "--num-gpus",
+          "2",
+          "--resume",
+          "--budget-seconds",
+          "6300.0",
+          "--disk-floor-gb",
+          "3.0",
+          "--heartbeat",
+          "/kaggle/working/runs/micro/enumeration_stage/heartbeat.json",
+          "OUTPUT_DIR",
+          "/kaggle/working/runs/micro/enumeration_stage",
+          "MODEL.WEIGHTS",
+          "/kaggle/working/runs/micro/quadrant_stage/model_final.pth",
+          "SOLVER.MAX_ITER",
+          "600",
+          "SOLVER.IMS_PER_BATCH",
+          "2",
+          "SOLVER.CHECKPOINT_PERIOD",
+          "150",
+          "SOLVER.AMP.ENABLED",
+          "True",
+          "MODEL_EMA.ENABLED",
+          "False",
+          "TEST.EVAL_PERIOD",
+          "0",
+          "SEED",
+          "40244023"
+        ],
+        "log": "/kaggle/working/runs/micro/enumeration_stage/train.log",
+        "wall_seconds": 3293.6
+      },
+      "config_hash": "89ed50e90e334b0a",
+      "disk": {
+        "removed": [
+          "model_0000599.pth"
+        ],
+        "slimmed": [
+          {
+            "path": "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+            "bytes_before": 2081856256,
+            "bytes_after": 694310999,
+            "dropped": [
+              "trainer"
+            ],
+            "freed_gb": 1.29
+          }
+        ],
+        "disk_free_gb": 17.65
+      },
+      "kind": "prerequisite"
+    },
+    {
+      "output_dir": "/kaggle/working/runs/micro/diagnosis_full",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "overrides": [
+        "OUTPUT_DIR",
+        "/kaggle/working/runs/micro/diagnosis_full",
+        "MODEL.WEIGHTS",
+        "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+        "SOLVER.MAX_ITER",
+        "900",
+        "SOLVER.IMS_PER_BATCH",
+        "2",
+        "SOLVER.CHECKPOINT_PERIOD",
+        "225",
+        "SOLVER.AMP.ENABLED",
+        "True",
+        "MODEL_EMA.ENABLED",
+        "False",
+        "TEST.EVAL_PERIOD",
+        "0",
+        "SEED",
+        "40244023"
+      ],
+      "seed": 40244023,
+      "max_iter": 900,
+      "final_iteration": 900,
+      "start_iteration": 0,
+      "ims_per_batch": 2,
+      "amp": true,
+      "ema": false,
+      "num_gpus": 2,
+      "wall_seconds": 4151.6,
+      "budget_seconds": 9900.0,
+      "stopped_on_time_budget": false,
+      "stopped_out_of_disk": false,
+      "weights_init": "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+      "noisy_box_train": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_train.json",
+      "noisy_box_val": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_val.json",
+      "tier": "2",
+      "trajectory_checkpoints": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "device": "cuda",
+      "name": "diagnosis_full",
+      "train_split": "diagnosis_train",
+      "plan": {
+        "max_iter": 900,
+        "source": "calibrated from 0.1135 it/s over 34 probe iterations",
+        "budget_hours": 2.75,
+        "budget_seconds": 9900.0,
+        "probe_seconds_charged": 0.0,
+        "raw_estimate": 1123.7,
+        "round_to": 300
+      },
+      "trajectory": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "manipulation": true,
+      "launch": {
+        "command": [
+          "/usr/bin/python3",
+          "/kaggle/working/repo/dentex-repro/src/train_entry.py",
+          "--config-file",
+          "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+          "--num-gpus",
+          "2",
+          "--resume",
+          "--budget-seconds",
+          "9900.0",
+          "--trajectory",
+          "{\"300\": \"traj_033\", \"600\": \"traj_067\"}",
+          "--disk-floor-gb",
+          "3.0",
+          "--heartbeat",
+          "/kaggle/working/runs/micro/diagnosis_full/heartbeat.json",
+          "OUTPUT_DIR",
+          "/kaggle/working/runs/micro/diagnosis_full",
+          "MODEL.WEIGHTS",
+          "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+          "SOLVER.MAX_ITER",
+          "900",
+          "SOLVER.IMS_PER_BATCH",
+          "2",
+          "SOLVER.CHECKPOINT_PERIOD",
+          "225",
+          "SOLVER.AMP.ENABLED",
+          "True",
+          "MODEL_EMA.ENABLED",
+          "False",
+          "TEST.EVAL_PERIOD",
+          "0",
+          "SEED",
+          "40244023"
+        ],
+        "log": "/kaggle/working/runs/micro/diagnosis_full/train.log",
+        "wall_seconds": 4190.3
+      },
+      "config_hash": "87a8386638c9b4ca",
+      "disk": {
+        "removed": [
+          "model_0000899.pth"
+        ],
+        "slimmed": [
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_full/model_final.pth",
+            "bytes_before": 2081915548,
+            "bytes_after": 694310999,
+            "dropped": [
+              "trainer"
+            ],
+            "freed_gb": 1.29
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_full/traj_033.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_full/traj_067.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          }
+        ],
+        "disk_free_gb": 15.62
+      },
+      "variant": "full",
+      "label": "Ours_full",
+      "switches": {
+        "transfer": true,
+        "manipulation": true
+      },
+      "kind": "diagnosis_variant"
+    },
+    {
+      "output_dir": "/kaggle/working/runs/micro/diagnosis_wo_manipulation",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "overrides": [
+        "OUTPUT_DIR",
+        "/kaggle/working/runs/micro/diagnosis_wo_manipulation",
+        "MODEL.WEIGHTS",
+        "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+        "SOLVER.MAX_ITER",
+        "900",
+        "SOLVER.IMS_PER_BATCH",
+        "2",
+        "SOLVER.CHECKPOINT_PERIOD",
+        "225",
+        "SOLVER.AMP.ENABLED",
+        "True",
+        "MODEL_EMA.ENABLED",
+        "False",
+        "TEST.EVAL_PERIOD",
+        "0",
+        "SEED",
+        "40244023"
+      ],
+      "seed": 40244023,
+      "max_iter": 900,
+      "final_iteration": 900,
+      "start_iteration": 0,
+      "ims_per_batch": 2,
+      "amp": true,
+      "ema": false,
+      "num_gpus": 2,
+      "wall_seconds": 4306.2,
+      "budget_seconds": 9900.0,
+      "stopped_on_time_budget": false,
+      "stopped_out_of_disk": false,
+      "weights_init": "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+      "noisy_box_train": null,
+      "noisy_box_val": null,
+      "tier": "2",
+      "trajectory_checkpoints": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "device": "cuda",
+      "name": "diagnosis_wo_manipulation",
+      "train_split": "diagnosis_train",
+      "plan": {
+        "max_iter": 900,
+        "source": "calibrated from 0.1135 it/s over 34 probe iterations",
+        "budget_hours": 2.75,
+        "budget_seconds": 9900.0,
+        "probe_seconds_charged": 0.0,
+        "raw_estimate": 1123.7,
+        "round_to": 300
+      },
+      "trajectory": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "manipulation": false,
+      "launch": {
+        "command": [
+          "/usr/bin/python3",
+          "/kaggle/working/repo/dentex-repro/src/train_entry.py",
+          "--config-file",
+          "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+          "--num-gpus",
+          "2",
+          "--resume",
+          "--budget-seconds",
+          "9900.0",
+          "--trajectory",
+          "{\"300\": \"traj_033\", \"600\": \"traj_067\"}",
+          "--disk-floor-gb",
+          "3.0",
+          "--heartbeat",
+          "/kaggle/working/runs/micro/diagnosis_wo_manipulation/heartbeat.json",
+          "OUTPUT_DIR",
+          "/kaggle/working/runs/micro/diagnosis_wo_manipulation",
+          "MODEL.WEIGHTS",
+          "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+          "SOLVER.MAX_ITER",
+          "900",
+          "SOLVER.IMS_PER_BATCH",
+          "2",
+          "SOLVER.CHECKPOINT_PERIOD",
+          "225",
+          "SOLVER.AMP.ENABLED",
+          "True",
+          "MODEL_EMA.ENABLED",
+          "False",
+          "TEST.EVAL_PERIOD",
+          "0",
+          "SEED",
+          "40244023"
+        ],
+        "log": "/kaggle/working/runs/micro/diagnosis_wo_manipulation/train.log",
+        "wall_seconds": 4345.8
+      },
+      "config_hash": "f4418137b3d6bb80",
+      "disk": {
+        "removed": [
+          "model_0000899.pth"
+        ],
+        "slimmed": [
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_manipulation/model_final.pth",
+            "bytes_before": 2081915548,
+            "bytes_after": 694310999,
+            "dropped": [
+              "trainer"
+            ],
+            "freed_gb": 1.29
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_manipulation/traj_033.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_manipulation/traj_067.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          }
+        ],
+        "disk_free_gb": 13.65
+      },
+      "variant": "wo_manipulation",
+      "label": "Ours_wo_Manipulation",
+      "switches": {
+        "transfer": true,
+        "manipulation": false
+      },
+      "kind": "diagnosis_variant"
+    },
+    {
+      "output_dir": "/kaggle/working/runs/micro/diagnosis_wo_transfer",
+      "config_file": "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+      "overrides": [
+        "OUTPUT_DIR",
+        "/kaggle/working/runs/micro/diagnosis_wo_transfer",
+        "MODEL.WEIGHTS",
+        "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+        "SOLVER.MAX_ITER",
+        "900",
+        "SOLVER.IMS_PER_BATCH",
+        "2",
+        "SOLVER.CHECKPOINT_PERIOD",
+        "225",
+        "SOLVER.AMP.ENABLED",
+        "True",
+        "MODEL_EMA.ENABLED",
+        "False",
+        "TEST.EVAL_PERIOD",
+        "0",
+        "SEED",
+        "40244023"
+      ],
+      "seed": 40244023,
+      "max_iter": 900,
+      "final_iteration": 900,
+      "start_iteration": 0,
+      "ims_per_batch": 2,
+      "amp": true,
+      "ema": false,
+      "num_gpus": 2,
+      "wall_seconds": 4295.5,
+      "budget_seconds": 9900.0,
+      "stopped_on_time_budget": false,
+      "stopped_out_of_disk": false,
+      "weights_init": "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+      "noisy_box_train": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_train.json",
+      "noisy_box_val": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_val.json",
+      "tier": "2",
+      "trajectory_checkpoints": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "device": "cuda",
+      "name": "diagnosis_wo_transfer",
+      "train_split": "diagnosis_train",
+      "plan": {
+        "max_iter": 900,
+        "source": "calibrated from 0.1135 it/s over 34 probe iterations",
+        "budget_hours": 2.75,
+        "budget_seconds": 9900.0,
+        "probe_seconds_charged": 0.0,
+        "raw_estimate": 1123.7,
+        "round_to": 300
+      },
+      "trajectory": {
+        "300": "traj_033",
+        "600": "traj_067"
+      },
+      "manipulation": true,
+      "launch": {
+        "command": [
+          "/usr/bin/python3",
+          "/kaggle/working/repo/dentex-repro/src/train_entry.py",
+          "--config-file",
+          "/kaggle/working/repo/dentex-repro/configs_repro/diffdet.dentex.diagnosis.yaml",
+          "--num-gpus",
+          "2",
+          "--resume",
+          "--budget-seconds",
+          "9900.0",
+          "--trajectory",
+          "{\"300\": \"traj_033\", \"600\": \"traj_067\"}",
+          "--disk-floor-gb",
+          "3.0",
+          "--heartbeat",
+          "/kaggle/working/runs/micro/diagnosis_wo_transfer/heartbeat.json",
+          "OUTPUT_DIR",
+          "/kaggle/working/runs/micro/diagnosis_wo_transfer",
+          "MODEL.WEIGHTS",
+          "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+          "SOLVER.MAX_ITER",
+          "900",
+          "SOLVER.IMS_PER_BATCH",
+          "2",
+          "SOLVER.CHECKPOINT_PERIOD",
+          "225",
+          "SOLVER.AMP.ENABLED",
+          "True",
+          "MODEL_EMA.ENABLED",
+          "False",
+          "TEST.EVAL_PERIOD",
+          "0",
+          "SEED",
+          "40244023"
+        ],
+        "log": "/kaggle/working/runs/micro/diagnosis_wo_transfer/train.log",
+        "wall_seconds": 4340.7
+      },
+      "config_hash": "375d5feecaac6386",
+      "disk": {
+        "removed": [
+          "model_0000899.pth"
+        ],
+        "slimmed": [
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_transfer/model_final.pth",
+            "bytes_before": 2081915548,
+            "bytes_after": 694310999,
+            "dropped": [
+              "trainer"
+            ],
+            "freed_gb": 1.29
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_transfer/traj_033.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          },
+          {
+            "path": "/kaggle/working/runs/micro/diagnosis_wo_transfer/traj_067.pth",
+            "skipped": "already slim",
+            "bytes": 694308913
+          }
+        ],
+        "disk_free_gb": 11.65
+      },
+      "variant": "wo_transfer",
+      "label": "Ours_wo_Transfer",
+      "switches": {
+        "transfer": false,
+        "manipulation": true
+      },
+      "kind": "diagnosis_variant"
+    }
+  ],
+  "variants_trained": [
+    "full",
+    "wo_manipulation",
+    "wo_transfer"
+  ],
+  "matched_budgets": {
+    "matched": true,
+    "shared": {
+      "max_iter": 900,
+      "seed": 40244023,
+      "ims_per_batch": 2,
+      "split": "diagnosis_train"
+    },
+    "stopped_on_time_budget": {
+      "diagnosis_full": false,
+      "diagnosis_wo_manipulation": false,
+      "diagnosis_wo_transfer": false
+    },
+    "wall_seconds": {
+      "diagnosis_full": 4151.6,
+      "diagnosis_wo_manipulation": 4306.2,
+      "diagnosis_wo_transfer": 4295.5
+    }
+  },
+  "full_claim_coverage": false,
+  "weights": {
+    "imagenet": "/kaggle/working/repo/models/swin_base_patch4_window7_224_22k.pth",
+    "quadrant": "/kaggle/working/runs/micro/quadrant_stage/model_final.pth",
+    "enumeration": "/kaggle/working/runs/micro/enumeration_stage/model_final.pth",
+    "variants": {
+      "full": "/kaggle/working/runs/micro/diagnosis_full/model_final.pth",
+      "wo_manipulation": "/kaggle/working/runs/micro/diagnosis_wo_manipulation/model_final.pth",
+      "wo_transfer": "/kaggle/working/runs/micro/diagnosis_wo_transfer/model_final.pth"
+    },
+    "base": {}
+  },
+  "noisy_boxes": {
+    "for_enumeration": {
+      "NOISY_BOX_TRAIN": "/kaggle/working/runs/micro/noisy_boxes/quadrant_over_quadrant_enumeration_train.json",
+      "NOISY_BOX_VAL": "/kaggle/working/runs/micro/noisy_boxes/quadrant_over_diagnosis_val.json"
+    },
+    "for_diagnosis": {
+      "NOISY_BOX_TRAIN": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_train.json",
+      "NOISY_BOX_VAL": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_val.json"
+    },
+    "prior_over_test": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_test.json",
+    "stats": {
+      "NOISY_BOX_TRAIN": {
+        "path": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_train.json",
+        "sha256": "5da3b4da966a539f25f74d5695537edd4acd89a59cc603d96b8d52b5c7901ef7",
+        "boxes": 247208,
+        "images_covered": 705,
+        "median_boxes_per_image": 349,
+        "median_score": 0.1303
+      },
+      "NOISY_BOX_VAL": {
+        "path": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_val.json",
+        "sha256": "7f2b14d964fcc76da269e045f2c14d59c4d5275ab415c668c313121efc70762d",
+        "boxes": 17386,
+        "images_covered": 50,
+        "median_boxes_per_image": 343,
+        "median_score": 0.1305
+      }
+    }
+  },
+  "prior_box_coverage": {
+    "boxes_total": 87659,
+    "boxes_kept": 0,
+    "images_with_boxes": 0,
+    "score_threshold": 0.5,
+    "path": "/kaggle/working/runs/micro/noisy_boxes/enumeration_over_diagnosis_test.json"
+  },
+  "trajectory_checkpoints": {
+    "full": {
+      "300": "traj_033",
+      "600": "traj_067"
+    },
+    "wo_manipulation": {
+      "300": "traj_033",
+      "600": "traj_067"
+    },
+    "wo_transfer": {
+      "300": "traj_033",
+      "600": "traj_067"
+    }
+  },
+  "degeneracy": {
+    "Ours_full": {
+      "AP": 0.17099403674588592,
+      "paper_AP": 37.6,
+      "fraction_of_paper": 0.004547713743241647,
+      "degenerate": true
+    },
+    "Ours_wo_Manipulation": {
+      "AP": 0.7902981164816864,
+      "paper_AP": 36.3,
+      "fraction_of_paper": 0.021771297974702106,
+      "degenerate": true
+    },
+    "Ours_wo_Transfer": {
+      "AP": 0.0,
+      "paper_AP": 39.4,
+      "fraction_of_paper": null,
+      "degenerate": true
+    }
+  },
+  "retained_run_records": [
+    "results_raw/micro/run_records/diagnosis_full.json",
+    "results_raw/micro/run_records/diagnosis_wo_manipulation.json",
+    "results_raw/micro/run_records/diagnosis_wo_transfer.json",
+    "results_raw/micro/run_records/enumeration_stage.json",
+    "results_raw/micro/run_records/quadrant_stage.json"
+  ],
+  "gpu_hours_spent": 5.307916666666667,
+  "kaggle_publish": {
+    "slug": "dentex-repro-ckpts",
+    "staging": "/kaggle/working/kaggle_upload/dentex-repro-ckpts",
+    "message": "final training run (micro mode)",
+    "directories": [
+      "/kaggle/working/runs/micro",
+      "/kaggle/working/paper_assets"
+    ],
+    "manual_fallback": "Save Version -> Save & Run All, then add the produced output as a Data source on the next notebook (Add Data -> Your Work).",
+    "status": "skipped",
+    "reason": "KAGGLE_USERNAME / KAGGLE_KEY not set \u2014 attach them via Add-ons -> Secrets, or publish manually."
+  },
+  "notebook": "04_final_training_run",
+  "written_at": "2026-08-20T06:50:02+0000"
+}

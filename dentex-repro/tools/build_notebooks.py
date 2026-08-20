@@ -1572,6 +1572,25 @@ if not records:
     # table renders empty, which would understate the study in the paper.
     records = train_utils.discover_runs()
 
+# Do these records describe the checkpoints the evaluation numbers came from?
+# An offline rebuild inherits results_raw/ from an earlier session, so a
+# training summary NEWER than the evaluation summary means the records document
+# a retraining whose checkpoints were never re-evaluated. Saying nothing would
+# attribute the inherited numbers to runs that did not produce them.
+stale_eval = None
+if not HAS_GPU:
+    prior_eval = setup_env.read_notebook_summary(NB) or {}
+    eval_written = prior_eval.get("written_at")
+    train_written = training.get("written_at")
+    if eval_written and train_written and train_written > eval_written:
+        stale_eval = (eval_written, train_written)
+STALE_EVAL_NOTE = (
+    "**Provenance: the run records below document the retraining written at {1}; "
+    "every evaluation number in this build was produced earlier (written at {0}) "
+    "from checkpoints whose training records were not retained. Records and "
+    "numbers describe DIFFERENT checkpoints until notebook 03 is re-run against "
+    "the retained runs.**".format(*stale_eval) if stale_eval else "")
+
 lines = ["# Reproducibility checklist", "",
          "Generated from executed-run records only.", "",
          "## Environment", "",
@@ -1589,8 +1608,10 @@ lines = ["# Reproducibility checklist", "",
 for name, digest in (data_summary.get("dataset_hashes") or {}).items():
     lines.append("- `{}`: `{}`".format(name, digest))
 
-lines += ["", "## Runs", "",
-          "| run | config hash | iterations | seed | batch | wall (s) | GPUs | stopped on budget |",
+lines += ["", "## Runs", ""]
+if STALE_EVAL_NOTE:
+    lines += [STALE_EVAL_NOTE, ""]
+lines += ["| run | config hash | iterations | seed | batch | wall (s) | GPUs | stopped on budget |",
           "|---|---|---|---|---|---|---|---|"]
 for record in records:
     lines.append("| {} | `{}` | {} | {} | {} | {} | {} | {} |".format(
@@ -1677,11 +1698,11 @@ for claim in tables.PAPER_CLAIMS:
                             .format(evidence, "; ".join(weak)))
     coverage.append({**claim, "status": status, "evidence": evidence})
 
-# Operator-reported wall-clock for the whole study, including the training
-# sessions whose run records were not retained. It is a recollection, not a
-# measurement, so it is reported separately from the hours this repository can
-# actually account for and is never summed with them. Set to None if unknown.
-OPERATOR_REPORTED_GPU_HOURS = 22.15
+# Operator-reported wall-clock for the whole study, kept SEPARATE from measured
+# hours and labelled as a recollection when set. None means: report only what
+# the run records and result files can prove. (A 22.15 h figure lived here
+# briefly and was withdrawn as unreliable -- prefer None over a guess.)
+OPERATOR_REPORTED_GPU_HOURS = None
 
 # What the artifacts themselves can account for: training wall time from the
 # run records (discover_runs also reads the copies the final training notebook
@@ -1698,8 +1719,8 @@ for _collection in (main_results, step_results, degradation_results, fault_resul
                 eval_seconds += float(_run.get("wall_seconds") or 0.0)
 measured_hours = training_hours + eval_seconds / 3600.0
 
-_compute_line = "Run mode: **{}**. GPU-hours accounted for by the run records here: **{:.2f}**.".format(
-    run.mode, measured_hours)
+_compute_line = ("Run mode: **{}**. Measured GPU-hours (training records + "
+                 "evaluation results): **{:.2f}**.".format(run.mode, measured_hours))
 if OPERATOR_REPORTED_GPU_HOURS is not None:
     _compute_line += (" Operator-reported total for the study: **{:.2f}** "
                       "(recollected, not measured; see Compute actually spent)."
@@ -1712,9 +1733,10 @@ for index, claim in enumerate(coverage, 1):
     lines.append("| {} | {} | {} | {} |".format(
         index, claim["claim"], claim["status"], claim["evidence"]))
 
-lines += ["", "## Compute actually spent", "",
-          "Two different things, kept apart on purpose.", "",
-          "| source | GPU-hours | provenance |", "|---|---|---|",
+lines += ["", "## Compute actually spent", ""]
+if OPERATOR_REPORTED_GPU_HOURS is not None:
+    lines += ["Two different things, kept apart on purpose.", ""]
+lines += ["| source | GPU-hours | provenance |", "|---|---|---|",
           "| training runs (retained run records) | {:.2f} | measured; "
           "`run_record.json` per stage |".format(training_hours),
           "| evaluation runs in `results_raw/` | {:.2f} | measured; every run "
@@ -1724,6 +1746,8 @@ lines += ["", "## Compute actually spent", "",
 if OPERATOR_REPORTED_GPU_HOURS is not None:
     lines.append("| whole study, operator-reported | {:.2f} | **recollected, not "
                  "measured** |".format(OPERATOR_REPORTED_GPU_HOURS))
+if STALE_EVAL_NOTE:
+    lines += ["", STALE_EVAL_NOTE]
 if not training_hours:
     lines += ["",
               "The gap is training. Training ran in earlier sessions whose "
