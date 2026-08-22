@@ -5,113 +5,119 @@
 #  - For a successful replication, it should be prefixed with "[Re]"
 #  - For a failed replication, it should be prefixed with "[¬Re]"
 #  - For other article types, no instruction (but please, not too long)
-title: "ReScience (R)evolution"
+title: "[¬Re] Diffusion-Based Hierarchical Multi-Label Object Detection to Analyze Panoramic Dental X-rays"
 
 # List of authors with name, orcid number, email and affiliation
 # Affiliation "*" means contact author (required even for single-authored papers)
 # To include author suffix format name as Last Suffix, First M.I. (e.g. Schackart III, Kenneth E.)
 authors:
-  - name: Konrad Hinsen
-    orcid: 0000-0003-0330-9428
-    email: konrad.hinsen@cnrs.fr
-    affiliations: 1,2
-    
-  - name: Nicolas P. Rougier
-    orcid: 0000-0002-6972-589X
-    email: Nicolas.Rougier@inria.fr
-    affiliations: 3,4,5,*      # * is for contact author
+  - name: Christopher Huang
+    orcid: 0009-0004-3034-9235
+    email: chuang19543@gmail.com
+    affiliations: 1
+
+  - name: Spursh Deshpande
+    orcid: 0009-0002-5344-0694
+    email: spursh.deshpande@gmail.com
+    affiliations: 2
+
+  - name: Wenhao Lu
+    orcid: 0009-0001-6517-8745
+    email: wenhao@nxthorizon.org
+    affiliations: 3,*      # * is for contact author
 
 # List of affiliations with code (corresponding to author affiliations), name
 # and address. You can also use these affiliations to add text such as "Equal
 # contributions" as name (with no address).
 affiliations:
   - code:    1
-    name:    Centre de Biophysique Moléculaire, CNRS UPR4301
-    address: Orléans, France
-    
+    name:    Heritage High School
+    address: Brentwood, California, USA
+
   - code:    2
-    name:    Synchrotron SOLEIL, Division Expériences
-    address: Gif sur Yvette, France
-    
+    name:    Crescenta Valley High School
+    address: La Crescenta, California, USA
+
   - code:    3
-    name:    INRIA Bordeaux Sud-Ouest
-    address: Bordeaux, France
-    
-  - code:    4
-    name:    LaBRI, Université de Bordeaux, Institut Polytechnique de Bordeaux,
-             Centre National de la Recherche Scientifique, UMR 5800
-    address: Talence, France
-    
-  - code:    5
-    name:    Institut des Maladies Neurodégénératives, Université  de Bordeaux,
-             Centre National de la Recherche Scientifique, UMR 5293
-    address: Bordeaux, France
+    name:    Millburn High School
+    address: Millburn, New Jersey, USA
 
 
 # List of keywords (adding the programming language might be a good idea)
-keywords: rescience c, rescience x
+keywords: rescience c, python, reproducibility, object detection, diffusion models, medical imaging, panoramic dental x-rays
 
 # Code URL and DOI/SWH (url is mandatory for replication, doi after acceptance)
 # You can get a DOI for your code from Zenodo, or an SWH identifier from
 # Software Heritage.
 #   see https://guides.github.com/activities/citable-code/
 code:
-  - url: https://github.com/rescience-c/template
-  - doi: 
-  - swh: 
+  - url: https://github.com/AIscend-Research/dental-repro
+  - doi:
+  - swh:
 
 # Data URL and DOI (optional if no data)
 data:
-  - url:
+  - url: https://huggingface.co/datasets/ibrahimhamamci/DENTEX
   - doi:
 
 # Information about the original article that has been replicated
 replication:
- - cite: # Full textual citation
- - bib:  # Bibtex key (if any) in your bibliography file
- - url:  # URL to the PDF, try to link to a non-paywall version
- - doi:  # Regular digital object identifier
+ - cite: "I. E. Hamamci, S. Er, E. Simsar, A. Sekuboyina, M. Gundogar, B. Stadlinger, A. Mehl and B. Menze. Diffusion-Based Hierarchical Multi-Label Object Detection to Analyze Panoramic Dental X-rays. Medical Image Computing and Computer Assisted Intervention (MICCAI 2023), pp. 389-399, 2023." # Full textual citation
+ - bib: hamamci2023hierarchicaldet # Bibtex key (if any) in your bibliography file
+ - url: https://arxiv.org/pdf/2303.06500 # URL to the PDF, try to link to a non-paywall version
+ - doi: 10.1007/978-3-031-43987-2_38 # Regular digital object identifier
 
 # Don't forget to surround abstract with double quotes
-abstract: "Three years have passed since ReScience published its first article
-           and since September 2015, things have been going steadily. We're
-           still alive, independent and without a budget. In the meantime, we
-           have published around 20 articles (mostly in computational
-           neuroscience & computational ecology) and the initial has grown
-           from around 10 to roughly 100 members (editors and reviewers), we
-           have advertised ReScience at several conferences worldwide, gave
-           some interviews and we published an article introducing ReScience in
-           PeerJ. Based on our experience at managing the journal during these
-           three years, we think the time is ripe for proposing some changes."
+abstract: "HierarchicalDet trains one diffusion-based detector across three tiers of DENTEX
+           panoramic X-ray annotation and attributes its accuracy gain to a noisy-box
+           manipulation scheme that feeds predictions from an earlier tier into the
+           denoising process of the next. No trained weights are released, so any
+           reproduction has to retrain the whole three-stage pipeline. We did so on
+           free-tier Kaggle hardware under a 900-iteration budget per stage. The resulting
+           models reach 6 to 13 percent of the reported AP, so this is a failed
+           reproduction, and the shortfall is attributable to our budget rather than to
+           the original work. Within that budget the direction of the manipulation
+           ablation held at all three tiers, although per-class results show the
+           tier-level gap is carried almost entirely by one easy class. The
+           weight-transfer ablation inverted: the variant that is strongest in the paper
+           collapsed to zero AP for us, which is what a short schedule predicts. Two
+           findings do not depend on our budget. The public DENTEX test release carries
+           no Deep Caries label at all, so it supports three of the four diagnosis
+           classes and the reported diagnosis numbers cannot be recomputed from public
+           data by anyone. The release also states two different licences for the same
+           dataset. We report per-class AP, sampling-step latency, corruption sensitivity
+           and failure-mode counts, none of which the original paper covers, and we say
+           plainly which of them are informative at this training scale and which are
+           not."
 
 # Bibliography file (yours)
 bibliography: bibliography.bib
-  
+
 # Type of the article
 # Type can be:
 #  * Editorial
 #  * Letter
 #  * Replication
-type: Editorial
+type: Replication
 
 # Scientific domain of the article (e.g. Computational Neuroscience)
 #  (one domain only & try to be not overly specific)
-domain: 
+domain: Computer Vision, Medical Imaging
 
 # Coding language (main one only if several)
-language:
+language: Python
 
-  
+
 # To be filled by the author(s) after acceptance
 # -----------------------------------------------------------------------------
 
 # For example, the URL of the GitHub issue where review actually occured
-review: 
-  - url: 
+review:
+  - url:
 
 contributors:
   - name:
-    orcid: 
+    orcid:
     role: editor
   - name:
     orcid:
@@ -122,19 +128,19 @@ contributors:
 
 # This information will be provided by the editor
 dates:
-  - received:  November 1, 2018
+  - received: August 19, 2026
   - accepted:
-  - published: 
+  - published:
 
 # This information will be provided by the editor
 article:
   - number: # Article number will be automatically assigned during publication
-  - doi:    # DOI from Zenodo
-  - url:    # Final PDF URL (Zenodo or rescience website?)
+  - doi: 10.5281/zenodo.22052255 # DOI from Zenodo
+  - url: https://zenodo.org/records/22052255 # Final PDF URL (Zenodo or rescience website?)
 
 # This information will be provided by the editor
 journal:
   - name:   "ReScience C"
   - issn:   2430-3658
-  - volume: 4
-  - issue:  1
+  - volume:
+  - issue:
